@@ -7,219 +7,242 @@
 
 <style>
 body{
-  background:#f2f2f2;
-  font-family:Arial, sans-serif;
+  font-family: Arial, sans-serif;
   margin:0;
   padding:20px;
-  box-sizing:border-box;
-}
-.container{
-  max-width:520px;
-  margin:auto;
   text-align:center;
 }
-.card{
-  background:#fff;
-  padding:40px 25px;
-  border-radius:15px;
-  box-shadow:0 4px 10px rgba(0,0,0,.1);
-  margin-bottom:20px;
-  min-height:120px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-weight:bold;
-  word-break:break-word;
+
+.container{
+  max-width:700px;
+  margin:auto;
 }
+
 button{
-  padding:12px;
-  margin:6px 0;
-  width:100%;
+  padding:10px 15px;
+  margin:5px;
   border:none;
   border-radius:8px;
   cursor:pointer;
-  font-size:14px;
+  font-size:16px;
 }
-.primary{background:#2196F3;color:#fff;}
-.green{background:#4CAF50;color:#fff;}
-.red{background:#f44336;color:#fff;}
-.gray{background:#555;color:#fff;}
 
-.progress-bar{
+.main-btn{
+  background:#4CAF50;
+  color:white;
+}
+
+.option-btn{
+  background:#2196F3;
+  color:white;
   width:100%;
-  height:25px;
+  margin-top:10px;
+}
+
+.correct{ background:#4CAF50 !important; }
+.wrong{ background:#f44336 !important; }
+
+.progress-container{
+  width:100%;
   background:#ddd;
   border-radius:20px;
-  overflow:hidden;
-  margin:10px 0;
+  margin-bottom:15px;
+  height:20px;
 }
-.progress-fill{
+
+.progress-bar{
   height:100%;
+  width:0%;
   background:#4CAF50;
-  text-align:center;
-  color:#fff;
-  line-height:25px;
-  font-size:13px;
+  border-radius:20px;
+}
+
+.card{
+  padding:20px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  margin-top:15px;
+}
+
+.hidden{ display:none; }
+
+.score-bar{
+  height:25px;
+  background:#4CAF50;
+  border-radius:20px;
+}
+
+@media(max-width:600px){
+  body{ padding:15px; }
 }
 </style>
 </head>
 
 <body>
-<div class="container" id="app"></div>
+<div class="container">
+
+<h1>Psychology Learning</h1>
+
+<div id="home">
+  <button class="main-btn" onclick="chooseMode('flash')">FLASH CARD</button>
+  <button class="main-btn" onclick="chooseMode('quiz')">ทดสอบความรู้</button>
+</div>
+
+<div id="amountSelect" class="hidden">
+  <h3>เลือกจำนวนข้อ</h3>
+  <button onclick="startGame(10)">10</button>
+  <button onclick="startGame(30)">30</button>
+  <button onclick="startGame(60)">60</button>
+  <button onclick="startGame(90)">90</button>
+</div>
+
+<div id="gameArea" class="hidden">
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div id="progressText"></div>
+
+  <div id="content"></div>
+</div>
+
+<div id="result" class="hidden"></div>
+
+</div>
 
 <script>
 
-const vocabulary = [
-{word:"Achievement testing",meaning:"วัดความรู้/ทักษะที่เรียนรู้มาในวิชาเฉพาะ"},
-{word:"Adjustment",meaning:"การปรับพฤติกรรมให้เข้ากับสภาพแวดล้อม"},
-{word:"Adversity Quotient (AQ)",meaning:"ความสามารถในการรับมือและฟันฝ่าวิกฤต"},
-{word:"Applied Psychology",meaning:"การนำทฤษฎีจิตวิทยาไปใช้แก้ปัญหาในชีวิตจริงหรือวิชาชีพต่างๆ"},
-{word:"Aptitude",meaning:"ศักยภาพเฉพาะตัวหรือความสามารถในการเรียนรู้ในอนาคต"},
-{word:"Assessment",meaning:"การตรวจสอบพฤติกรรมและจิตใจด้วยวิธีการที่หลากหลาย"},
-{word:"Attitude",meaning:"แนวโน้มความรู้สึกและพฤติกรรมต่อสิ่งใดสิ่งหนึ่ง (คิด-รู้สึก-ทำ)"},
-{word:"Basic needs",meaning:"ลำดับขั้นความต้องการ 5 ขั้นของ Maslow"},
-{word:"Behavior modification",meaning:"การเปลี่ยนพฤติกรรมโดยใช้ทฤษฎีการเรียนรู้"},
-{word:"Behavior therapy",meaning:"การบำบัดเพื่อขจัดพฤติกรรมที่ไม่พึงประสงค์"},
-{word:"Big five personality factors",meaning:"5 ด้านหลักที่ใช้ชี้วัดบุคลิกภาพมนุษย์"},
-{word:"Career paths",meaning:"โอกาสความก้าวหน้าในสายงานระยะยาว"},
-{word:"Career planning",meaning:"กระบวนการประเมินตนเองเพื่อตัดสินใจเลือกอาชีพ"},
-{word:"Clarification",meaning:"เทคนิคการทวนความเพื่อให้สิ่งที่พูดชัดเจนขึ้น"},
-{word:"Cognition",meaning:"กระบวนการทางปัญญา เช่น การคิด การจำ การตัดสินใจ"},
-{word:"Concept",meaning:"ความคิดสรุปยอดของสิ่งที่มีลักษณะร่วมกัน"},
-{word:"Counseling technique",meaning:"วิธีการต่างๆ ที่ใช้ในการให้คำปรึกษา"},
-{word:"Defense mechanism",meaning:"วิธีที่จิตใช้ป้องกันความเจ็บปวดในใจ"},
-{word:"Delusion",meaning:"ความเชื่อที่ผิดจากความเป็นจริงอย่างรุนแรง"},
-{word:"Depression",meaning:"อารมณ์หดหู่ ขาดความกระปรี้กระเปร่า"},
-{word:"Disability",meaning:"ความบกพร่องทางกายหรือจิตที่กระทบต่อการใช้ชีวิต"},
-{word:"Distortion",meaning:"การปรับเปลี่ยนความจริงให้เข้ากับสภาพจิตใจ"},
-{word:"Egocentric",meaning:"การยึดตนเองเป็นศูนย์กลาง"},
-{word:"Emotional intelligence (EQ)",meaning:"ความสามารถในการจัดการอารมณ์ตนเองและสังคม"},
-{word:"Empathy",meaning:"การเข้าใจและเข้าถึงความรู้สึกของคนอื่น"},
-{word:"Extraversion",meaning:"ลักษณะนิสัยที่ชอบเข้าสังคม"},
-{word:"Face validity",meaning:"การพิจารณาเบื้องต้นว่าเครื่องมือวัดดูน่าเชื่อถือ"},
-{word:"First impressions",meaning:"ความรู้สึกแรกพบที่เปลี่ยนยาก"},
-{word:"Foot-in-the-door technique",meaning:"กลวิธีขอความช่วยเหลือเล็กๆ ก่อนเพื่อให้ได้สิ่งที่ใหญ่กว่า"},
-{word:"Free rider",meaning:"สมาชิกกลุ่มที่ได้ผลประโยชน์โดยไม่ช่วยงาน"},
-{word:"Frustration",meaning:"อารมณ์ที่เกิดเมื่อถูกขัดขวางไม่ให้ถึงเป้าหมาย"},
-{word:"Generalization",meaning:"การนำผลจากสิ่งหนึ่งไปสรุปคลุมถึงสิ่งอื่นๆ"},
-{word:"Guilt",meaning:"ความรู้สึกเมื่อรู้ว่าตนได้กระทำสิ่งที่ผิดพลาด"},
-{word:"Hallucination",meaning:"การรับรู้สิ่งที่ไม่มีอยู่จริง"},
-{word:"Halo effect",meaning:"ความประทับใจด้านหนึ่งส่งผลให้ตัดสินด้านอื่นดีไปด้วย"},
-{word:"Human relations",meaning:"ความสัมพันธ์ที่ดีระหว่างบุคคล"},
-{word:"Hypnosis",meaning:"สภาวะคล้ายหลับที่ยังรับรู้และสื่อสารได้"},
-{word:"Individualism",meaning:"การเน้นเป้าหมายและเอกลักษณ์ส่วนตัวมากกว่ากลุ่ม"},
-{word:"Intelligence Quotient (IQ)",meaning:"หน่วยวัดความฉลาดทางสติปัญญาเทียบกับอายุ"},
-{word:"Intrinsic motivation",meaning:"แรงจูงใจจากความพอใจในกิจกรรมนั้นเอง"},
-{word:"Job enlargement",meaning:"การเพิ่มงานในระดับความยากเท่าเดิม"},
-{word:"Job enrichment",meaning:"การเพิ่มงานที่ท้าทายขึ้น"},
-{word:"Law of effect",meaning:"พฤติกรรมที่ทำแล้วพอใจจะถูกกระทำซ้ำ"},
-{word:"Manipulation",meaning:"การจัดการสถานการณ์หรือใช้กลวิธีควบคุมผู้อื่น"},
-{word:"Mediation",meaning:"การใช้คนกลางช่วยลดความขัดแย้ง"},
-{word:"Minnesota Multiphasic Personality Inventory (MMPI)",meaning:"แบบทดสอบบุคลิกภาพมาตรฐานทางคลินิก"},
-{word:"Morality",meaning:"หลักเกณฑ์การตัดสินความถูกผิด"},
-{word:"Music Therapy",meaning:"การใช้ดนตรีเพื่อบำบัดทางอารมณ์"},
-{word:"Myers-Briggs Type Indicator (MBTI)",meaning:"แบบวัดบุคลิกภาพ 4 มิติ"},
-{word:"Narcissism",meaning:"ความหลงตัวเอง"},
-{word:"Need for achievement (N-Ach)",meaning:"ความปรารถนาที่จะทำให้สำเร็จตามมาตรฐานสูง"},
-{word:"Negative punishment",meaning:"ลดพฤติกรรมโดยเอาสิ่งที่ชอบออกไป"},
-{word:"Negative reinforcement",meaning:"เพิ่มพฤติกรรมโดยเอาสิ่งที่ไม่ชอบออกไป"},
-{word:"Observational learning",meaning:"การเรียนรู้จากการดูตัวอย่างผู้อื่น"},
-{word:"Overprotection",meaning:"การปกป้องเกินควรจนขัดขวางพัฒนาการ"},
-{word:"Peer group",meaning:"กลุ่มคนที่มีอิทธิพลต่อกันสูง"},
-{word:"Perception",meaning:"การแปลความหมายจากประสาทสัมผัส"},
-{word:"Personality disorder",meaning:"แบบแผนพฤติกรรมผิดปกติอย่างถาวร"},
-{word:"Persuasion",meaning:"การสื่อสารเพื่อเปลี่ยนเจตคติผู้อื่น"},
-{word:"Phobia",meaning:"การกลัวอย่างรุนแรงและไร้เหตุผล"},
-{word:"Prejudice",meaning:"ความลำเอียงในการตัดสินผู้อื่น"},
-{word:"Primacy effect",meaning:"แนวโน้มจำข้อมูลแรกได้ดีที่สุด"},
-{word:"Projective test",meaning:"การวัดจิตใจผ่านสิ่งเร้าที่คลุมเครือ"},
-{word:"Psychological rapport",meaning:"การสร้างความเชื่อใจในการปรึกษา"},
-{word:"Psychosis",meaning:"อาการทางจิตที่หลุดจากโลกความจริง"},
-{word:"Random sampling",meaning:"การเลือกตัวแทนประชากรแบบสุ่ม"},
-{word:"Rapid-Eye-Movement Sleep (REM sleep)",meaning:"ช่วงที่ฝันและลูกตากลอกเร็ว"},
-{word:"Rationalization",meaning:"การหาเหตุผลเข้าข้างตน"},
-{word:"Ratio scale",meaning:"การวัดที่มีศูนย์แท้"},
-{word:"Real self",meaning:"ตัวตนที่แท้จริง"},
-{word:"Recall",meaning:"การดึงความจำในอดีตกลับมา"},
-{word:"Recognition",meaning:"ความรู้สึกคุ้นเคยเมื่อเห็นสิ่งเร้า"},
-{word:"Regression",meaning:"การกลับไปพฤติกรรมแบบเด็ก"},
-{word:"Rehabilitation",meaning:"การฟื้นฟูให้กลับมาใช้ชีวิตได้ปกติ"},
-{word:"Relaxation",meaning:"การลดความเครียดทั้งกายและใจ"},
-{word:"Repression",meaning:"การผลักความทรงจำเจ็บปวดลงจิตไร้สำนึก"},
-{word:"Role conflict",meaning:"ความขัดแย้งในบทบาท"},
-{word:"Self-Concept",meaning:"การรับรู้และประเมินภาพลักษณ์ตนเอง"},
-{word:"Self-Discipline",meaning:"การควบคุมตนเองระยะยาว"},
-{word:"Self-Efficacy",meaning:"ความเชื่อมั่นว่าตนทำสิ่งใดสำเร็จได้"},
-{word:"Self-Esteem",meaning:"ความภาคภูมิใจในคุณค่าของตนเอง"},
-{word:"Semantic Differential Scale",meaning:"การวัดความรู้สึกผ่านคำคู่ตรงข้าม"},
-{word:"Socialization",meaning:"กระบวนการเรียนรู้ค่านิยมจากสังคม"},
-{word:"Social Quotient (SQ)",meaning:"ทักษะการเข้าสังคม"},
-{word:"Stereotype",meaning:"การเหมารวมคนกลุ่มหนึ่ง"},
-{word:"Tension",meaning:"สภาวะตึงเครียด"},
-{word:"Test Battery",meaning:"ชุดแบบทดสอบหลายแบบใช้ร่วมกัน"},
-{word:"Trait",meaning:"ลักษณะนิสัยที่คงทน"},
-{word:"Unconscious",meaning:"ส่วนของจิตที่เจ้าตัวไม่รู้ตัว"},
-{word:"Value",meaning:"สิ่งที่ใช้ตัดสินใจเลือกกระทำ"}
+// ตัวอย่างคำศัพท์ (ใส่ของคุณทั้งหมดแทนที่ตรงนี้ได้เลย)
+const words = [
+{term:"Achievement testing", thai:"การทดสอบผลสัมฤทธิ์", definition:"วัดความรู้หรือทักษะที่เรียนรู้มาในวิชาเฉพาะ"},
+{term:"Adjustment", thai:"การปรับตัว", definition:"การปรับพฤติกรรมให้เข้ากับสภาพแวดล้อม"},
+{term:"Adversity Quotient (AQ)", thai:"ดัชนีวัดความสามารถในการเผชิญอุปสรรค", definition:"ความสามารถในการรับมือและฟันฝ่าวิกฤต"}, 
+{term:"Applied Psychology", thai:"จิตวิทยาประยุกต์", definition:"การนำทฤษฎีจิตวิทยาไปใช้แก้ปัญหาในชีวิตจริงหรือวิชาชีพต่างๆ"},
+{term:"Aptitude", thai:"ความถนัด", definition:"ศักยภาพเฉพาะตัวหรือความสามารถในการเรียนรู้ในอนาคต"}, {term:"Assessment", thai:"การประเมิน", definition:"การตรวจสอบพฤติกรรมและจิตใจด้วยวิธีการที่หลากหลาย"}, {term:"Attitude", thai:"เจตคติ", definition:"แนวโน้มความรู้สึกและพฤติกรรมต่อสิ่งใดสิ่งหนึ่ง (คิด-รู้สึก-ทำ)"}, {term:"Basic needs", thai:"ความต้องการพื้นฐาน", definition:"ลำดับขั้นความต้องการ 5 ขั้นของ Maslow"}, {term:"Behavior modification", thai:"การปรับพฤติกรรม", definition:"การเปลี่ยนพฤติกรรมโดยใช้ทฤษฎีการเรียนรู้"}, {term:"Behavior therapy", thai:"พฤติกรรมบำบัด", definition:"การบำบัดเพื่อขจัดพฤติกรรมที่ไม่พึงประสงค์"}, {term:"Big five personality factors", thai:"5 องค์ประกอบหลักของบุคลิกภาพ", definition:"5 ด้านหลักที่ใช้ชี้วัดบุคลิกภาพมนุษย์"}, {term:"Career paths", thai:"เส้นทางอาชีพ", definition:"โอกาสความก้าวหน้าในสายงานระยะยาว"}, {term:"Career planning", thai:"การวางแผนอาชีพ", definition:"กระบวนการประเมินตนเองเพื่อตัดสินใจเลือกอาชีพ"}, {term:"Clarification", thai:"การสร้างความกระจ่าง", definition:"เทคนิคการทวนความเพื่อให้สิ่งที่พูดชัดเจนขึ้น"}, {term:"Cognition", thai:"การรู้คิด", definition:"กระบวนการทางปัญญา เช่น การคิด การจำ การตัดสินใจ"}, {term:"Concept", thai:"มโนทัศน์/ความคิดรวบยอด", definition:"ความคิดสรุปยอดของสิ่งที่มีลักษณะร่วมกัน"}, {term:"Counseling technique", thai:"เทคนิคการให้บริการปรึกษา", definition:"วิธีการต่างๆ ที่ใช้ในการให้คำปรึกษา"}, {term:"Defense mechanism", thai:"กลไกป้องกันตน", definition:"วิธีที่จิตใช้ป้องกันความเจ็บปวดในใจ (ระดับจิตไร้สำนึก)"}, {term:"Delusion", thai:"การหลงผิด", definition:"ความเชื่อที่ผิดจากความเป็นจริงอย่างรุนแรงโดยไม่มีเหตุผล"}, {term:"Depression", thai:"ภาวะซึมเศร้า", definition:"อารมณ์หดหู่ ขาดความกระปรี้กระเปร่า"}, {term:"Disability", thai:"การขาดความสามารถ", definition:"ความบกพร่องทางกายหรือจิตที่กระทบต่อการใช้ชีวิต"}, {term:"Distortion", thai:"การบิดเบือน", definition:"การปรับเปลี่ยนความจริงหรือประสบการณ์ให้เข้ากับสภาพจิตใจตนเอง"}, {term:"Egocentric", thai:"การยึดตนเองเป็นศูนย์กลาง", definition:"การสนใจแต่ความเห็นตนเอง ไม่เข้าใจมุมมองผู้อื่น"}, {term:"Emotional intelligence (EQ)", thai:"เชาวน์อารมณ์", definition:"ความสามารถในการจัดการอารมณ์ตนเองและสังคม"}, {term:"Empathy", thai:"การรู้ซึ้งถึงความรู้สึก", definition:"การเข้าใจและเข้าถึงความรู้สึกนึกคิดของคนอื่น"}, {term:"Extraversion", thai:"บุคลิกภาพแบบเปิดเผย", definition:"ลักษณะนิสัยที่ชอบเข้าสังคม สนใจสิ่งภายนอก"}, {term:"Face validity", thai:"ความตรงตามรูปลักษณ์", definition:"การพิจารณาเบื้องต้นว่าเครื่องมือวัดดูน่าเชื่อถือตามวัตถุประสงค์"}, {term:"First impressions", thai:"ความประทับใจครั้งแรก", definition:"ความรู้สึกแรกพบที่เปลี่ยนยาก"}, {term:"Foot-in-the-door technique", thai:"เทคนิคการขอน้อยก่อนแล้วขอมาก", definition:"กลวิธีขอความช่วยเหลือเล็กๆ ก่อน เพื่อให้ได้สิ่งที่ใหญ่กว่าในภายหลัง"}, {term:"Free rider", thai:"คนแอบอิงประโยชน์", definition:"สมาชิกกลุ่มที่ได้ผลประโยชน์โดยไม่ยอมช่วยงาน"}, {term:"Frustration", thai:"ความคับข้องใจ", definition:"อารมณ์ที่เกิดเมื่อถูกขัดขวางไม่ให้ถึงเป้าหมาย"}, {term:"Generalization", thai:"การสรุปรวบยอด/การแผ่ขยาย", definition:"การนำผลจากสิ่งหนึ่งไปสรุปคลุมถึงสิ่งอื่นๆ ที่คล้ายกัน"}, {term:"Guilt", thai:"ความรู้สึกผิด", definition:"ความรู้สึกเมื่อรู้ว่าตนได้กระทำสิ่งที่ผิดพลาด"}, {term:"Hallucination", thai:"ประสาทหลอน", definition:"การรับรู้ (เห็น/ได้ยิน) สิ่งที่ไม่มีอยู่จริง"}, {term:"Halo effect", thai:"เฮโลเอฟเฟกต์", definition:"การที่ความประทับใจด้านหนึ่งส่งผลให้เราตัดสินด้านอื่นๆ ของเขาดีไปด้วย"}, {term:"Human relations", thai:"มนุษยสัมพันธ์", definition:"ความสัมพันธ์ที่ดีระหว่างบุคคลเพื่อให้เกิดความเข้าใจกัน"}, {term:"Hypnosis", thai:"การสะกดจิต", definition:"สภาวะคล้ายหลับที่ยังสามารถรับรู้และสื่อสารกับผู้สะกดจิตได้"}, {term:"Individualism", thai:"ปัจเจกนิยม", definition:"การเน้นเป้าหมายและเอกลักษณ์ส่วนตัวมากกว่ากลุ่ม"}, {term:"Intelligence Quotient (IQ)", thai:"ระดับเชาวน์ปัญญา", definition:"หน่วยวัดความฉลาดทางสติปัญญาเทียบกับอายุ"}, {term:"Intrinsic motivation", thai:"แรงจูงใจภายใน", definition:"ความอยากทำกิจกรรมเพราะความพอใจในตัวกิจกรรมนั้นเอง"}, {term:"Job enlargement", thai:"การเพิ่มความรับผิดชอบในงาน", definition:"การเพิ่มงานในระดับความยากเท่าเดิม"}, {term:"Job enrichment", thai:"การเพิ่มคุณค่างาน", definition:"การเพิ่มงานที่ท้าทายขึ้น มีบทบาทการวางแผนและตัดสินใจ"}, {term:"Law of effect", thai:"กฎแห่งผล", definition:"พฤติกรรมที่ทำแล้วพอใจจะถูกกระทำซ้ำ"}, {term:"Manipulation", thai:"การจัดกระทำ/การชักใย", definition:"การจัดการสถานการณ์ในการวิจัย หรือการใช้กลวิธีคุมผู้อื่น"}, {term:"Mediation", thai:"การไกล่เกลี่ย", definition:"การใช้คนกลางช่วยลดความขัดแย้ง"}, {term:"Minnesota Multiphasic Personality Inventory (MMPI)", thai:"MMPI", definition:"แบบทดสอบบุคลิกภาพมาตรฐานที่วัดลักษณะทางคลินิกหลายด้าน"}, {term:"Morality", thai:"คุณธรรม/จริยธรรม", definition:"หลักเกณฑ์การตัดสินความถูกผิดตามมาตรฐานสังคม"}, {term:"Music Therapy", thai:"ดนตรีบำบัด", definition:"การใช้ดนตรีเพื่อผ่อนคลายหรือบำบัดทางอารมณ์"}, {term:"Myers-Briggs Type Indicator (MBTI)", thai:"MBTI", definition:"แบบวัดบุคลิกภาพ 4 มิติ (เช่น เก็บตัว-เปิดเผย, คิด-รู้สึก)"}, {term:"Narcissism", thai:"ความหลงตัวเอง", definition:"ความรู้สึกว่าตนเหนือกว่าคนอื่นและต้องการการยอมรับสูง"}, {term:"Need for achievement (N-Ach)", thai:"ความต้องการสัมฤทธิ์ผล", definition:"ความปรารถนาที่จะทำให้สำเร็จตามมาตรฐานที่สูง"}, {term:"Negative punishment", thai:"การลงโทษทางลบ", definition:"การลดพฤติกรรมแย่ๆ โดยการ 'เอาสิ่งที่ชอบออกไป'"}, {term:"Negative reinforcement", thai:"การเสริมแรงทางลบ", definition:"การเพิ่มพฤติกรรมดีๆ โดยการ 'เอาสิ่งที่ไม่ชอบออกไป'"}, {term:"Observational learning", thai:"การเรียนรู้จากการสังเกต", definition:"การเรียนรู้จากการดูตัวอย่างผู้อื่น"}, {term:"Overprotection", thai:"การปกป้องเกินควร", definition:"การเลี้ยงดูที่พ่อแม่ทำให้ทุกอย่างจนขัดขวางพัฒนาการเด็ก"}, {term:"Peer group", thai:"กลุ่มเพื่อน", definition:"กลุ่มคนที่มีลักษณะและเป้าหมายคล้ายกัน ซึ่งมีอิทธิพลต่อกันสูง"}, {term:"Perception", thai:"การรับรู้", definition:"การแปลความหมายจากประสาทสัมผัสให้เป็นประสบการณ์ที่เข้าใจได้"}, {term:"Personality disorder", thai:"โรคบุคลิกภาพผิดปกติ", definition:"แบบแผนพฤติกรรมที่ผิดปกติอย่างถาวรและกระทบการใช้ชีวิต"}, {term:"Persuasion", thai:"การโน้มน้าวจิตใจ", definition:"การสื่อสารเพื่อเปลี่ยนเจตคติผู้อื่น"}, {term:"Phobia", thai:"โรคกลัว", definition:"การกลัวบางสิ่งอย่างรุนแรงและไร้เหตุผลจนควบคุมไม่ได้"}, {term:"Prejudice", thai:"อคติ", definition:"ความลำเอียงในการตัดสินผู้อื่น (มักเป็นทางลบ)"}, {term:"Primacy effect", thai:"ผลเสนอแรก", definition:"แนวโน้มที่จะจำข้อมูลหรือประทับใจสิ่งที่เจอเป็นอันดับแรกได้ดีที่สุด"}, {term:"Projective test", thai:"การทดสอบแบบฉายภาพจิต", definition:"การวัดจิตใจผ่านการตอบสนองต่อสิ่งเร้าที่คลุมเครือ (เช่น หยดหมึก)"}, {term:"Psychological rapport", thai:"การสร้างสัมพันธภาพทางจิตวิทยา", definition:"การสร้างความเชื่อใจและเป็นกันเองในการปรึกษา"}, {term:"Psychosis", thai:"โรคจิต", definition:"อาการทางจิตที่หลุดจากโลกความจริง (หลงผิด/หลอน)"}, {term:"Random sampling", thai:"การสุ่มตัวอย่าง", definition:"การเลือกตัวแทนประชากรแบบกระจายเพื่อให้ได้ข้อมูลที่เที่ยงตรง"}, {term:"Rapid-Eye-Movement Sleep (REM sleep)", thai:"การหลับช่วงเร็ม", definition:"ช่วงที่ฝันและลูกตากลอกไปมาอย่างรวดเร็ว"}, {term:"Rationalization", thai:"การหาเหตุผลเข้าข้างตน", definition:"การอ้างเหตุผลเพื่อให้ตนเองรู้สึกสบายใจขึ้นเมื่อทำผิด"}, {term:"Ratio scale", thai:"มาตราอัตราส่วน", definition:"การวัดที่มีช่วงเท่ากันและมี 'ศูนย์แท้' (เช่น น้ำหนัก ส่วนสูง)"}, {term:"Real self", thai:"ตนที่แท้จริง", definition:"ตัวตนที่แท้จริงซึ่งบางครั้งอาจถูกซ่อนไว้"}, {term:"Recall", thai:"การระลึกได้", definition:"การดึงความจำในอดีตกลับมาใช้งาน"}, {term:"Recognition", thai:"การจำได้", definition:"ความรู้สึกคุ้นเคยเมื่อเห็นสิ่งเร้าที่เคยมีประสบการณ์มาก่อน"}, {term:"Regression", thai:"การถดถอย", definition:"การกลับไปทำพฤติกรรมแบบเด็กเพื่อป้องกันตนเอง หรือการถอยกลับไปสู่สภาวะเดิม"}, {term:"Rehabilitation", thai:"การฟื้นฟูสมรรถภาพ", definition:"การปรับปรุงแก้ไขร่างกาย/จิตใจให้กลับมาใช้ชีวิตได้ปกติ"}, {term:"Relaxation", thai:"การผ่อนคลาย", definition:"การลดความเครียดทั้งกายและใจ"}, {term:"Repression", thai:"การเก็บกด", definition:"การผลักความทรงจำที่เจ็บปวดลงสู่จิตไร้สำนึกโดยไม่ตั้งใจ"}, {term:"Role conflict", thai:"ความขัดแย้งในบทบาท", definition:"สภาวะที่ต้องทำหลายบทบาทซึ่งขัดแย้งกันเอง"}, {term:"Self-Concept", thai:"อัตมโนทัศน์", definition:"การรับรู้และประเมินภาพลักษณ์ ค่านิยม และคุณค่าของตนเอง"}, {term:"Self-Discipline", thai:"การมีวินัยในตนเอง", definition:"การควบคุมตนเองให้ทำในสิ่งที่ถูกต้องในระยะยาว"}, {term:"Self-Efficacy", thai:"การรับรู้ความสามารถของตน", definition:"ความเชื่อมั่นว่าตนเองสามารถทำสิ่งใดสิ่งหนึ่งให้สำเร็จได้"}, {term:"Self-Esteem", thai:"การเห็นคุณค่าแห่งตน", definition:"ความภาคภูมิใจและยอมรับในคุณค่าของตนเอง"}, {term:"Semantic Differential Scale", thai:"มาตรจำแนกความหมาย", definition:"การวัดความรู้สึกผ่านคำคู่ตรงข้าม (เช่น ดี-เลว)"}, {term:"Socialization", thai:"กระบวนการเรียนรู้ทางสังคม", definition:"การถ่ายทอดค่านิยมและจารีตจากสังคมสู่บุคคล"}, {term:"Social Quotient (SQ)", thai:"ดัชนีวัดความสามารถทางสังคม", definition:"ทักษะการเข้าสังคมและอยู่ร่วมกับผู้อื่นอย่างมีความสุข"}, {term:"Stereotype", thai:"การเหมารวม", definition:"การมองคนกลุ่มหนึ่งด้วยภาพจำที่แคบและลุ่มหลง (อคติ)"}, {term:"Tension", thai:"ความรู้สึกตึงเครียด", definition:"สภาวะจิตใจหรือกล้ามเนื้อที่ตื่นตัวและกระวนกระวาย"}, {term:"Test Battery", thai:"ชุดแบบทดสอบ", definition:"กลุ่มของแบบทดสอบที่ใช้ร่วมกันเพื่อประเมินเรื่องใดเรื่องหนึ่ง"}, {term:"Trait", thai:"ลักษณะนิสัย", definition:"บุคลิกภาพที่คงทนและเป็นตัวกำหนดพฤติกรรมเฉพาะบุคคล"}, {term:"Unconscious", thai:"จิตไร้สำนึก", definition:"ส่วนของจิตที่เก็บความลับ แรงขับ หรือความจำที่เจ้าตัวไม่รู้ตัวแต่ส่งผลต่อการกระทำ"}, {term:"Value", thai:"ค่านิยม", definition:"สิ่งที่บุคคลหรือสังคมยึดถือเพื่อใช้ตัดสินใจเลือกกระทำสิ่งต่างๆ"}
 ];
 
-// ===== ระบบ (เหมือนเวอร์ชันก่อนหน้า) =====
-let shuffled=[],index=0,score=0,wrongList=[];
-function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+let mode = "";
+let selectedWords = [];
+let currentIndex = 0;
+let score = 0;
+let wrongAnswers = [];
+let totalQuestions = 0;
 
-function showHome(){
-document.getElementById("app").innerHTML=`
-<h2>Psychology Learning App</h2>
-<button class="primary" onclick="startFlash()">FLASH CARD</button>
-<button class="green" onclick="startQuiz()">ทดสอบความรู้</button>`;
+function shuffle(array){
+  return array.sort(()=>Math.random()-0.5);
 }
 
-function startFlash(){shuffled=shuffle([...vocabulary]);index=0;score=0;wrongList=[];loadFlash();}
-function loadFlash(){
-if(index>=shuffled.length)return endFlash();
-document.getElementById("app").innerHTML=`
-<div class="card">${shuffled[index].word}</div>
-<button class="primary" onclick="revealFlash()">เฉลย</button>
-<button class="green" onclick="correctFlash()">ตอบได้</button>
-<button class="red" onclick="skipFlash()">ข้าม</button>`;}
-function revealFlash(){document.querySelector(".card").innerText=shuffled[index].meaning;}
-function correctFlash(){score++;index++;loadFlash();}
-function skipFlash(){wrongList.push(shuffled[index]);index++;loadFlash();}
-function endFlash(){
-let total=shuffled.length,percent=Math.round(score/total*100),wrong=total-score;
-let html=`<h3>ผลลัพธ์</h3><p>ถูก ${score} | ผิด ${wrong}</p>
-<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}%</div></div>`;
-if(wrongList.length){html+="<h4>คำที่ผิด:</h4><ul>";wrongList.forEach(i=>html+=`<li>${i.word} = ${i.meaning}</li>`);html+="</ul>";}
-html+=`<button class="gray" onclick="showHome()">กลับหน้าแรก</button>
-<button class="primary" onclick="startFlash()">เริ่มใหม่</button>`;
-document.getElementById("app").innerHTML=html;}
+function chooseMode(selectedMode){
+  mode = selectedMode;
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("amountSelect").classList.remove("hidden");
+}
 
-function startQuiz(){shuffled=shuffle([...vocabulary]);index=0;score=0;wrongList=[];loadQuiz();}
-function loadQuiz(){
-if(index>=shuffled.length)return endQuiz();
-let correct=shuffled[index];
-let options=[correct];
-while(options.length<3){
-let rand=vocabulary[Math.floor(Math.random()*vocabulary.length)];
-if(!options.includes(rand))options.push(rand);}
-options=shuffle(options);
-let btns=options.map(o=>`<button onclick="checkAnswer(this,'${o.meaning}','${correct.meaning}')">${o.meaning}</button>`).join("");
-document.getElementById("app").innerHTML=`<div class="card">${correct.word}</div>${btns}`;}
-function checkAnswer(btn,selected,correct){
-let buttons=document.querySelectorAll("button");
-buttons.forEach(b=>b.disabled=true);
-if(selected===correct){btn.style.background="#4CAF50";score++;}
-else{btn.style.background="#f44336";wrongList.push(shuffled[index]);}
-setTimeout(()=>{index++;loadQuiz();},600);}
-function endQuiz(){
-let total=shuffled.length,percent=Math.round(score/total*100),wrong=total-score;
-let html=`<h3>ผลการทดสอบ</h3><p>ถูก ${score} | ผิด ${wrong}</p>
-<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}%</div></div>`;
-if(wrongList.length){html+="<h4>ข้อที่ตอบผิด:</h4><ul>";wrongList.forEach(i=>html+=`<li>${i.word} = ${i.meaning}</li>`);html+="</ul>";}
-html+=`<button class="gray" onclick="showHome()">กลับหน้าแรก</button>
-<button class="primary" onclick="startQuiz()">เริ่มใหม่</button>`;
-document.getElementById("app").innerHTML=html;}
+function startGame(amount){
+  totalQuestions = amount > words.length ? words.length : amount;
+  selectedWords = shuffle([...words]).slice(0,totalQuestions);
+  currentIndex = 0;
+  score = 0;
+  wrongAnswers = [];
 
-showHome();
+  document.getElementById("amountSelect").classList.add("hidden");
+  document.getElementById("gameArea").classList.remove("hidden");
+  loadQuestion();
+}
+
+function updateProgress(){
+  let percent = ((currentIndex)/totalQuestions)*100;
+  document.getElementById("progressBar").style.width = percent + "%";
+  document.getElementById("progressText").innerText =
+    "ข้อที่ " + (currentIndex) + " / " + totalQuestions;
+}
+
+function loadQuestion(){
+  if(currentIndex >= totalQuestions){
+    showResult();
+    return;
+  }
+
+  updateProgress();
+  const word = selectedWords[currentIndex];
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+
+  if(mode==="flash"){
+    content.innerHTML = `
+      <div class="card">
+        <h2>${word.term}</h2>
+        <h3>${word.thai}</h3>
+        <p id="def" class="hidden">${word.definition}</p>
+        <button onclick="showAnswer()">เฉลย</button>
+        <button onclick="nextQuestion()">ถัดไป</button>
+      </div>`;
+  }
+
+  if(mode==="quiz"){
+    let choices = shuffle([
+      word.thai,
+      ...shuffle(words.filter(w=>w.term!==word.term)).slice(0,2).map(w=>w.thai)
+    ]);
+
+    content.innerHTML = `<h2>${word.term}</h2>`;
+    choices.forEach(choice=>{
+      let btn = document.createElement("button");
+      btn.className="option-btn";
+      btn.innerText=choice;
+      btn.onclick=()=>checkAnswer(btn, choice===word.thai);
+      content.appendChild(btn);
+    });
+  }
+}
+
+function showAnswer(){
+  document.getElementById("def").classList.remove("hidden");
+}
+
+function nextQuestion(){
+  currentIndex++;
+  loadQuestion();
+}
+
+function checkAnswer(button, isCorrect){
+  if(isCorrect){
+    button.classList.add("correct");
+    score++;
+  }else{
+    button.classList.add("wrong");
+    wrongAnswers.push(selectedWords[currentIndex]);
+  }
+  setTimeout(()=>{
+    currentIndex++;
+    loadQuestion();
+  },800);
+}
+
+function showResult(){
+  document.getElementById("gameArea").classList.add("hidden");
+  const resultDiv = document.getElementById("result");
+  resultDiv.classList.remove("hidden");
+
+  let percent = Math.round((score/totalQuestions)*100);
+  let wrongPercent = 100-percent;
+
+  resultDiv.innerHTML = `
+    <h2>ผลลัพธ์</h2>
+    <div style="background:#ddd;border-radius:20px;">
+      <div class="score-bar" style="width:${percent}%"></div>
+    </div>
+    <p>ถูก ${score} ข้อ (${percent}%)</p>
+    <p>ผิด ${totalQuestions-score} ข้อ (${wrongPercent}%)</p>
+    <h3>ข้อที่ตอบผิด</h3>
+    ${wrongAnswers.map(w=>`<p><b>${w.term}</b> = ${w.thai}</p>`).join("")}
+    <button onclick="restart()">เริ่มใหม่</button>
+  `;
+}
+
+function restart(){
+  document.getElementById("result").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+}
 
 </script>
 </body>
