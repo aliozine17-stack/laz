@@ -12,18 +12,22 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
+    padding: 20px; /* ✅ เพิ่มระยะขอบรอบจอ */
+    box-sizing: border-box;
 }
 
 .container {
     text-align: center;
-    width: 450px;
+    width: 100%;
+    max-width: 450px; /* ✅ จำกัดความกว้าง */
+    margin: auto;
 }
 
 .card {
     background-color: white;
-    padding: 40px;
+    padding: 40px 25px; /* ✅ เพิ่มระยะด้านข้าง */
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     margin-bottom: 20px;
@@ -33,30 +37,22 @@ body {
     align-items: center;
     font-size: 22px;
     font-weight: bold;
+    word-wrap: break-word; /* ✅ กันคำล้น */
 }
 
 button {
-    padding: 10px 15px;
-    margin: 5px;
+    padding: 12px 16px;
+    margin: 6px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
 }
 
-.next { background-color: #4CAF50; color: white; }
-.skip { background-color: #f44336; color: white; }
-.reveal { background-color: #2196F3; color: white; }
-.restart { background-color: #555; color: white; }
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 .result-box {
     margin-top: 20px;
     text-align: left;
+    padding: 0 5px; /* ✅ เว้นขอบตอนสรุปผล */
 }
 
 .progress-bar {
@@ -74,13 +70,22 @@ button:disabled {
     text-align: center;
     color: white;
     line-height: 25px;
+    font-size: 13px;
 }
 
-.wrong-list {
-    margin-top: 10px;
-    font-size: 14px;
+@media (max-width: 480px) {
+    .card {
+        font-size: 18px; /* ✅ ลดขนาดตัวอักษรบนมือถือ */
+        padding: 30px 20px;
+    }
+
+    button {
+        width: 100%; /* ✅ ปุ่มเต็มความกว้างในมือถือ */
+        margin: 6px 0;
+    }
 }
 </style>
+
 </head>
 
 <body>
@@ -207,3 +212,4 @@ startGame();
 
 </body>
 </html>
+
