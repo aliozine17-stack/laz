@@ -3,213 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flash Card</title>
+<title>Psychology Learning App</title>
 
 <style>
-body {
-    background-color: #f2f2f2;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px; /* ✅ เพิ่มระยะขอบรอบจอ */
-    box-sizing: border-box;
+body{
+  background:#f2f2f2;
+  font-family:Arial, sans-serif;
+  margin:0;
+  padding:20px;
+  box-sizing:border-box;
 }
-
-.container {
-    text-align: center;
-    width: 100%;
-    max-width: 450px; /* ✅ จำกัดความกว้าง */
-    margin: auto;
+.container{
+  max-width:520px;
+  margin:auto;
+  text-align:center;
 }
-
-.card {
-    background-color: white;
-    padding: 40px 25px; /* ✅ เพิ่มระยะด้านข้าง */
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    min-height: 120px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-    font-weight: bold;
-    word-wrap: break-word; /* ✅ กันคำล้น */
+.card{
+  background:#fff;
+  padding:40px 25px;
+  border-radius:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+  margin-bottom:20px;
+  min-height:120px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-weight:bold;
+  word-break:break-word;
 }
-
-button {
-    padding: 12px 16px;
-    margin: 6px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
+button{
+  padding:12px;
+  margin:6px 0;
+  width:100%;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
 }
+.primary{background:#2196F3;color:#fff;}
+.green{background:#4CAF50;color:#fff;}
+.red{background:#f44336;color:#fff;}
+.gray{background:#555;color:#fff;}
 
-.result-box {
-    margin-top: 20px;
-    text-align: left;
-    padding: 0 5px; /* ✅ เว้นขอบตอนสรุปผล */
+.progress-bar{
+  width:100%;
+  height:25px;
+  background:#ddd;
+  border-radius:20px;
+  overflow:hidden;
+  margin:10px 0;
 }
-
-.progress-bar {
-    width: 100%;
-    height: 25px;
-    background-color: #ddd;
-    border-radius: 20px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.progress-correct {
-    height: 100%;
-    background-color: #4CAF50;
-    text-align: center;
-    color: white;
-    line-height: 25px;
-    font-size: 13px;
-}
-
-@media (max-width: 480px) {
-    .card {
-        font-size: 18px; /* ✅ ลดขนาดตัวอักษรบนมือถือ */
-        padding: 30px 20px;
-    }
-
-    button {
-        width: 100%; /* ✅ ปุ่มเต็มความกว้างในมือถือ */
-        margin: 6px 0;
-    }
+.progress-fill{
+  height:100%;
+  background:#4CAF50;
+  text-align:center;
+  color:#fff;
+  line-height:25px;
+  font-size:13px;
 }
 </style>
-
 </head>
 
 <body>
-
-<div class="container">
-    <div class="card" id="card"></div>
-
-    <div id="buttons">
-        <button class="reveal" onclick="revealAnswer()">เฉลย</button>
-        <button class="next" onclick="markCorrect()">ตอบได้</button>
-        <button class="skip" onclick="skipCard()">ข้ามคำนี้</button>
-    </div>
-
-    <div class="result-box" id="resultBox"></div>
-</div>
+<div class="container" id="app"></div>
 
 <script>
 
-const originalFlashcards = [
-    { word: "Apple", meaning: "แอปเปิล" },
-    { word: "Dog", meaning: "สุนัข" },
-    { word: "Book", meaning: "หนังสือ" },
-    { word: "Sun", meaning: "ดวงอาทิตย์" },
-    { word: "Water", meaning: "น้ำ" }
+const vocabulary = [
+{word:"Achievement testing",meaning:"วัดความรู้/ทักษะที่เรียนรู้มาในวิชาเฉพาะ"},
+{word:"Adjustment",meaning:"การปรับพฤติกรรมให้เข้ากับสภาพแวดล้อม"},
+{word:"Adversity Quotient (AQ)",meaning:"ความสามารถในการรับมือและฟันฝ่าวิกฤต"},
+{word:"Applied Psychology",meaning:"การนำทฤษฎีจิตวิทยาไปใช้แก้ปัญหาในชีวิตจริงหรือวิชาชีพต่างๆ"},
+{word:"Aptitude",meaning:"ศักยภาพเฉพาะตัวหรือความสามารถในการเรียนรู้ในอนาคต"},
+{word:"Assessment",meaning:"การตรวจสอบพฤติกรรมและจิตใจด้วยวิธีการที่หลากหลาย"},
+{word:"Attitude",meaning:"แนวโน้มความรู้สึกและพฤติกรรมต่อสิ่งใดสิ่งหนึ่ง (คิด-รู้สึก-ทำ)"},
+{word:"Basic needs",meaning:"ลำดับขั้นความต้องการ 5 ขั้นของ Maslow"},
+{word:"Behavior modification",meaning:"การเปลี่ยนพฤติกรรมโดยใช้ทฤษฎีการเรียนรู้"},
+{word:"Behavior therapy",meaning:"การบำบัดเพื่อขจัดพฤติกรรมที่ไม่พึงประสงค์"},
+{word:"Big five personality factors",meaning:"5 ด้านหลักที่ใช้ชี้วัดบุคลิกภาพมนุษย์"},
+{word:"Career paths",meaning:"โอกาสความก้าวหน้าในสายงานระยะยาว"},
+{word:"Career planning",meaning:"กระบวนการประเมินตนเองเพื่อตัดสินใจเลือกอาชีพ"},
+{word:"Clarification",meaning:"เทคนิคการทวนความเพื่อให้สิ่งที่พูดชัดเจนขึ้น"},
+{word:"Cognition",meaning:"กระบวนการทางปัญญา เช่น การคิด การจำ การตัดสินใจ"},
+{word:"Concept",meaning:"ความคิดสรุปยอดของสิ่งที่มีลักษณะร่วมกัน"},
+{word:"Counseling technique",meaning:"วิธีการต่างๆ ที่ใช้ในการให้คำปรึกษา"},
+{word:"Defense mechanism",meaning:"วิธีที่จิตใช้ป้องกันความเจ็บปวดในใจ"},
+{word:"Delusion",meaning:"ความเชื่อที่ผิดจากความเป็นจริงอย่างรุนแรง"},
+{word:"Depression",meaning:"อารมณ์หดหู่ ขาดความกระปรี้กระเปร่า"},
+{word:"Disability",meaning:"ความบกพร่องทางกายหรือจิตที่กระทบต่อการใช้ชีวิต"},
+{word:"Distortion",meaning:"การปรับเปลี่ยนความจริงให้เข้ากับสภาพจิตใจ"},
+{word:"Egocentric",meaning:"การยึดตนเองเป็นศูนย์กลาง"},
+{word:"Emotional intelligence (EQ)",meaning:"ความสามารถในการจัดการอารมณ์ตนเองและสังคม"},
+{word:"Empathy",meaning:"การเข้าใจและเข้าถึงความรู้สึกของคนอื่น"},
+{word:"Extraversion",meaning:"ลักษณะนิสัยที่ชอบเข้าสังคม"},
+{word:"Face validity",meaning:"การพิจารณาเบื้องต้นว่าเครื่องมือวัดดูน่าเชื่อถือ"},
+{word:"First impressions",meaning:"ความรู้สึกแรกพบที่เปลี่ยนยาก"},
+{word:"Foot-in-the-door technique",meaning:"กลวิธีขอความช่วยเหลือเล็กๆ ก่อนเพื่อให้ได้สิ่งที่ใหญ่กว่า"},
+{word:"Free rider",meaning:"สมาชิกกลุ่มที่ได้ผลประโยชน์โดยไม่ช่วยงาน"},
+{word:"Frustration",meaning:"อารมณ์ที่เกิดเมื่อถูกขัดขวางไม่ให้ถึงเป้าหมาย"},
+{word:"Generalization",meaning:"การนำผลจากสิ่งหนึ่งไปสรุปคลุมถึงสิ่งอื่นๆ"},
+{word:"Guilt",meaning:"ความรู้สึกเมื่อรู้ว่าตนได้กระทำสิ่งที่ผิดพลาด"},
+{word:"Hallucination",meaning:"การรับรู้สิ่งที่ไม่มีอยู่จริง"},
+{word:"Halo effect",meaning:"ความประทับใจด้านหนึ่งส่งผลให้ตัดสินด้านอื่นดีไปด้วย"},
+{word:"Human relations",meaning:"ความสัมพันธ์ที่ดีระหว่างบุคคล"},
+{word:"Hypnosis",meaning:"สภาวะคล้ายหลับที่ยังรับรู้และสื่อสารได้"},
+{word:"Individualism",meaning:"การเน้นเป้าหมายและเอกลักษณ์ส่วนตัวมากกว่ากลุ่ม"},
+{word:"Intelligence Quotient (IQ)",meaning:"หน่วยวัดความฉลาดทางสติปัญญาเทียบกับอายุ"},
+{word:"Intrinsic motivation",meaning:"แรงจูงใจจากความพอใจในกิจกรรมนั้นเอง"},
+{word:"Job enlargement",meaning:"การเพิ่มงานในระดับความยากเท่าเดิม"},
+{word:"Job enrichment",meaning:"การเพิ่มงานที่ท้าทายขึ้น"},
+{word:"Law of effect",meaning:"พฤติกรรมที่ทำแล้วพอใจจะถูกกระทำซ้ำ"},
+{word:"Manipulation",meaning:"การจัดการสถานการณ์หรือใช้กลวิธีควบคุมผู้อื่น"},
+{word:"Mediation",meaning:"การใช้คนกลางช่วยลดความขัดแย้ง"},
+{word:"Minnesota Multiphasic Personality Inventory (MMPI)",meaning:"แบบทดสอบบุคลิกภาพมาตรฐานทางคลินิก"},
+{word:"Morality",meaning:"หลักเกณฑ์การตัดสินความถูกผิด"},
+{word:"Music Therapy",meaning:"การใช้ดนตรีเพื่อบำบัดทางอารมณ์"},
+{word:"Myers-Briggs Type Indicator (MBTI)",meaning:"แบบวัดบุคลิกภาพ 4 มิติ"},
+{word:"Narcissism",meaning:"ความหลงตัวเอง"},
+{word:"Need for achievement (N-Ach)",meaning:"ความปรารถนาที่จะทำให้สำเร็จตามมาตรฐานสูง"},
+{word:"Negative punishment",meaning:"ลดพฤติกรรมโดยเอาสิ่งที่ชอบออกไป"},
+{word:"Negative reinforcement",meaning:"เพิ่มพฤติกรรมโดยเอาสิ่งที่ไม่ชอบออกไป"},
+{word:"Observational learning",meaning:"การเรียนรู้จากการดูตัวอย่างผู้อื่น"},
+{word:"Overprotection",meaning:"การปกป้องเกินควรจนขัดขวางพัฒนาการ"},
+{word:"Peer group",meaning:"กลุ่มคนที่มีอิทธิพลต่อกันสูง"},
+{word:"Perception",meaning:"การแปลความหมายจากประสาทสัมผัส"},
+{word:"Personality disorder",meaning:"แบบแผนพฤติกรรมผิดปกติอย่างถาวร"},
+{word:"Persuasion",meaning:"การสื่อสารเพื่อเปลี่ยนเจตคติผู้อื่น"},
+{word:"Phobia",meaning:"การกลัวอย่างรุนแรงและไร้เหตุผล"},
+{word:"Prejudice",meaning:"ความลำเอียงในการตัดสินผู้อื่น"},
+{word:"Primacy effect",meaning:"แนวโน้มจำข้อมูลแรกได้ดีที่สุด"},
+{word:"Projective test",meaning:"การวัดจิตใจผ่านสิ่งเร้าที่คลุมเครือ"},
+{word:"Psychological rapport",meaning:"การสร้างความเชื่อใจในการปรึกษา"},
+{word:"Psychosis",meaning:"อาการทางจิตที่หลุดจากโลกความจริง"},
+{word:"Random sampling",meaning:"การเลือกตัวแทนประชากรแบบสุ่ม"},
+{word:"Rapid-Eye-Movement Sleep (REM sleep)",meaning:"ช่วงที่ฝันและลูกตากลอกเร็ว"},
+{word:"Rationalization",meaning:"การหาเหตุผลเข้าข้างตน"},
+{word:"Ratio scale",meaning:"การวัดที่มีศูนย์แท้"},
+{word:"Real self",meaning:"ตัวตนที่แท้จริง"},
+{word:"Recall",meaning:"การดึงความจำในอดีตกลับมา"},
+{word:"Recognition",meaning:"ความรู้สึกคุ้นเคยเมื่อเห็นสิ่งเร้า"},
+{word:"Regression",meaning:"การกลับไปพฤติกรรมแบบเด็ก"},
+{word:"Rehabilitation",meaning:"การฟื้นฟูให้กลับมาใช้ชีวิตได้ปกติ"},
+{word:"Relaxation",meaning:"การลดความเครียดทั้งกายและใจ"},
+{word:"Repression",meaning:"การผลักความทรงจำเจ็บปวดลงจิตไร้สำนึก"},
+{word:"Role conflict",meaning:"ความขัดแย้งในบทบาท"},
+{word:"Self-Concept",meaning:"การรับรู้และประเมินภาพลักษณ์ตนเอง"},
+{word:"Self-Discipline",meaning:"การควบคุมตนเองระยะยาว"},
+{word:"Self-Efficacy",meaning:"ความเชื่อมั่นว่าตนทำสิ่งใดสำเร็จได้"},
+{word:"Self-Esteem",meaning:"ความภาคภูมิใจในคุณค่าของตนเอง"},
+{word:"Semantic Differential Scale",meaning:"การวัดความรู้สึกผ่านคำคู่ตรงข้าม"},
+{word:"Socialization",meaning:"กระบวนการเรียนรู้ค่านิยมจากสังคม"},
+{word:"Social Quotient (SQ)",meaning:"ทักษะการเข้าสังคม"},
+{word:"Stereotype",meaning:"การเหมารวมคนกลุ่มหนึ่ง"},
+{word:"Tension",meaning:"สภาวะตึงเครียด"},
+{word:"Test Battery",meaning:"ชุดแบบทดสอบหลายแบบใช้ร่วมกัน"},
+{word:"Trait",meaning:"ลักษณะนิสัยที่คงทน"},
+{word:"Unconscious",meaning:"ส่วนของจิตที่เจ้าตัวไม่รู้ตัว"},
+{word:"Value",meaning:"สิ่งที่ใช้ตัดสินใจเลือกกระทำ"}
 ];
 
-let flashcards = [];
-let currentIndex = 0;
-let score = 0;
-let revealed = false;
-let wrongAnswers = [];
+// ===== ระบบ (เหมือนเวอร์ชันก่อนหน้า) =====
+let shuffled=[],index=0,score=0,wrongList=[];
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 
-const card = document.getElementById("card");
-const nextBtn = document.querySelector(".next");
-const resultBox = document.getElementById("resultBox");
-
-function shuffle(array) {
-    return array.sort(() => Math.random() - 0.5);
+function showHome(){
+document.getElementById("app").innerHTML=`
+<h2>Psychology Learning App</h2>
+<button class="primary" onclick="startFlash()">FLASH CARD</button>
+<button class="green" onclick="startQuiz()">ทดสอบความรู้</button>`;
 }
 
-function startGame() {
-    flashcards = shuffle([...originalFlashcards]);
-    currentIndex = 0;
-    score = 0;
-    revealed = false;
-    wrongAnswers = [];
-    document.getElementById("buttons").style.display = "block";
-    resultBox.innerHTML = "";
-    loadCard();
-}
+function startFlash(){shuffled=shuffle([...vocabulary]);index=0;score=0;wrongList=[];loadFlash();}
+function loadFlash(){
+if(index>=shuffled.length)return endFlash();
+document.getElementById("app").innerHTML=`
+<div class="card">${shuffled[index].word}</div>
+<button class="primary" onclick="revealFlash()">เฉลย</button>
+<button class="green" onclick="correctFlash()">ตอบได้</button>
+<button class="red" onclick="skipFlash()">ข้าม</button>`;}
+function revealFlash(){document.querySelector(".card").innerText=shuffled[index].meaning;}
+function correctFlash(){score++;index++;loadFlash();}
+function skipFlash(){wrongList.push(shuffled[index]);index++;loadFlash();}
+function endFlash(){
+let total=shuffled.length,percent=Math.round(score/total*100),wrong=total-score;
+let html=`<h3>ผลลัพธ์</h3><p>ถูก ${score} | ผิด ${wrong}</p>
+<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}%</div></div>`;
+if(wrongList.length){html+="<h4>คำที่ผิด:</h4><ul>";wrongList.forEach(i=>html+=`<li>${i.word} = ${i.meaning}</li>`);html+="</ul>";}
+html+=`<button class="gray" onclick="showHome()">กลับหน้าแรก</button>
+<button class="primary" onclick="startFlash()">เริ่มใหม่</button>`;
+document.getElementById("app").innerHTML=html;}
 
-function loadCard() {
-    if (currentIndex >= flashcards.length) {
-        endGame();
-        return;
-    }
-    card.textContent = flashcards[currentIndex].word;
-    revealed = false;
-    nextBtn.disabled = false;
-}
+function startQuiz(){shuffled=shuffle([...vocabulary]);index=0;score=0;wrongList=[];loadQuiz();}
+function loadQuiz(){
+if(index>=shuffled.length)return endQuiz();
+let correct=shuffled[index];
+let options=[correct];
+while(options.length<3){
+let rand=vocabulary[Math.floor(Math.random()*vocabulary.length)];
+if(!options.includes(rand))options.push(rand);}
+options=shuffle(options);
+let btns=options.map(o=>`<button onclick="checkAnswer(this,'${o.meaning}','${correct.meaning}')">${o.meaning}</button>`).join("");
+document.getElementById("app").innerHTML=`<div class="card">${correct.word}</div>${btns}`;}
+function checkAnswer(btn,selected,correct){
+let buttons=document.querySelectorAll("button");
+buttons.forEach(b=>b.disabled=true);
+if(selected===correct){btn.style.background="#4CAF50";score++;}
+else{btn.style.background="#f44336";wrongList.push(shuffled[index]);}
+setTimeout(()=>{index++;loadQuiz();},600);}
+function endQuiz(){
+let total=shuffled.length,percent=Math.round(score/total*100),wrong=total-score;
+let html=`<h3>ผลการทดสอบ</h3><p>ถูก ${score} | ผิด ${wrong}</p>
+<div class="progress-bar"><div class="progress-fill" style="width:${percent}%">${percent}%</div></div>`;
+if(wrongList.length){html+="<h4>ข้อที่ตอบผิด:</h4><ul>";wrongList.forEach(i=>html+=`<li>${i.word} = ${i.meaning}</li>`);html+="</ul>";}
+html+=`<button class="gray" onclick="showHome()">กลับหน้าแรก</button>
+<button class="primary" onclick="startQuiz()">เริ่มใหม่</button>`;
+document.getElementById("app").innerHTML=html;}
 
-function revealAnswer() {
-    card.textContent = flashcards[currentIndex].meaning;
-    revealed = true;
-    nextBtn.disabled = true;
-    wrongAnswers.push(flashcards[currentIndex]);
-}
-
-function markCorrect() {
-    if (!revealed) {
-        score++;
-        currentIndex++;
-        loadCard();
-    }
-}
-
-function skipCard() {
-    if (!revealed) {
-        wrongAnswers.push(flashcards[currentIndex]);
-    }
-    currentIndex++;
-    loadCard();
-}
-
-function endGame() {
-    document.getElementById("buttons").style.display = "none";
-    card.textContent = "สรุปผลคะแนน 🎉";
-
-    let total = flashcards.length;
-    let wrong = total - score;
-    let correctPercent = ((score / total) * 100).toFixed(0);
-    let wrongPercent = 100 - correctPercent;
-
-    let html = `
-        <h3>ผลลัพธ์</h3>
-        <p>ตอบถูก: ${score} คำ (${correctPercent}%)</p>
-        <p>ตอบผิด: ${wrong} คำ (${wrongPercent}%)</p>
-
-        <div class="progress-bar">
-            <div class="progress-correct" style="width:${correctPercent}%">
-                ${correctPercent}%
-            </div>
-        </div>
-    `;
-
-    if (wrongAnswers.length > 0) {
-        html += "<h4>คำที่ตอบผิด:</h4><ul>";
-        wrongAnswers.forEach(item => {
-            html += `<li>${item.word} = ${item.meaning}</li>`;
-        });
-        html += "</ul>";
-    } else {
-        html += "<p>สุดยอด! ตอบถูกทั้งหมด 👏</p>";
-    }
-
-    html += `<button class="restart" onclick="startGame()">เริ่มใหม่</button>`;
-
-    resultBox.innerHTML = html;
-}
-
-startGame();
+showHome();
 
 </script>
-
 </body>
 </html>
-
