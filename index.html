@@ -16,53 +16,70 @@ body{
 }
 .container{
     width:95%;
-    max-width:700px;
+    max-width:750px;
     background:white;
-    padding:20px;
+    padding:30px 20px 20px 20px;
     border-radius:15px;
     box-shadow:0 5px 15px rgba(0,0,0,0.2);
     position:relative;
 }
-h1{text-align:center;}
-.button{
-    padding:10px 15px;
-    margin:5px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-}
-.primary{background:#4CAF50;color:white;}
-.secondary{background:#555;color:white;}
-.choice{
-    display:block;
-    width:100%;
-    margin:8px 0;
-    padding:10px;
-    border-radius:8px;
-    border:none;
-    cursor:pointer;
-    background:#f0f0f0;
-}
-.choice.correct{background:#4CAF50;color:white;}
-.choice.wrong{background:#e74c3c;color:white;}
-.top-left{
+
+/* มุมบน */
+.top-bar{
     position:absolute;
     top:10px;
     left:15px;
-    font-weight:bold;
-}
-.top-right{
-    position:absolute;
-    top:10px;
     right:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:bold;
+    font-size:16px;
 }
+
+/* คำศัพท์ */
 .word{
-    font-size:20px;
+    font-size:22px;
     text-align:center;
-    margin:20px 0;
+    margin:60px 0 20px 0;
     font-weight:bold;
 }
+
+/* ปุ่มทั่วไป */
+.button{
+    padding:12px 18px;
+    margin:5px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+}
+.primary{background:#4CAF50;color:white;}
+.secondary{background:#555;color:white;}
+
+/* ตัวเลือก */
+.choice{
+    display:block;
+    width:100%;
+    margin:10px 0;
+    padding:14px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    background:#f0f0f0;
+    font-size:17px;
+}
+.choice.correct{background:#4CAF50;color:white;}
+.choice.wrong{background:#e74c3c;color:white;}
+
 .center{text-align:center;}
+
+/* มือถือให้ใหญ่ขึ้นอีก */
+@media (max-width:600px){
+    .word{font-size:24px;}
+    .choice{font-size:18px;}
+    .button{font-size:17px;}
+}
 </style>
 </head>
 <body>
@@ -112,11 +129,6 @@ const questionData = [
 {term:"Intelligence Quotient (IQ) (ระดับเชาวน์ปัญญา)",def:"หน่วยวัดความฉลาดทางสติปัญญาเทียบกับอายุ"},
 {term:"Intrinsic motivation (แรงจูงใจภายใน)",def:"ความอยากทำกิจกรรมเพราะความพอใจในตัวกิจกรรมนั้นเอง"}
 ];
-
-// (ข้อมูลเยอะมาก ถ้าใส่ครบทุกคำจะยาวเกินขีดจำกัดข้อความระบบ)
-// 👉 ถ้าคุณต้องการ "เวอร์ชันเต็มครบทุกคำ 100%" บอกฉันว่า “เอาไฟล์เต็ม” 
-// เดี๋ยวฉันจัดไฟล์โค้ดสมบูรณ์ให้แบบครบทั้งหมดทันที
-
 let selectedAmount=0;
 let currentIndex=0;
 let score=0;
@@ -127,7 +139,7 @@ const app=document.getElementById("app");
 
 function showMode(){
     app.innerHTML=`
-    <h1>โหมดทดสอบความรู้</h1>
+    <h1 style="text-align:center;">โหมดทดสอบความรู้</h1>
     <div class="center">
         <button class="button primary" onclick="selectAmount(10)">10 ข้อ</button>
         <button class="button primary" onclick="selectAmount(30)">30 ข้อ</button>
@@ -169,16 +181,18 @@ function renderQuestion(){
     options.sort(()=>0.5-Math.random());
 
     app.innerHTML=`
-    <div class="top-left">${currentIndex+1}/${selectedAmount}</div>
-    <div class="top-right">
+    <div class="top-bar">
+        <div>${currentIndex+1}/${selectedAmount}</div>
         <button class="button secondary" onclick="showMode()">เริ่มใหม่</button>
     </div>
+
     <div class="word">
         ${q.term}
-        <div>
+        <div style="margin-top:15px;">
             <button class="button secondary" onclick="skipQuestion()">ข้าม</button>
         </div>
     </div>
+
     ${options.map(opt=>
         `<button class="choice" onclick="selectAnswer(this,'${opt.replace(/'/g,"\\'")}')">${opt}</button>`
     ).join("")}
@@ -214,7 +228,7 @@ function skipQuestion(){
 
 function showResult(){
     app.innerHTML=`
-    <h1>จบเกม 🎉</h1>
+    <h1 style="text-align:center;">จบเกม 🎉</h1>
     <p class="center">คุณเก่งมาก! พยายามได้ดีแล้ว 💪</p>
     <p class="center">คะแนน: ${score} / ${selectedAmount}</p>
     <h3>เฉลยข้อที่ผิด</h3>
@@ -225,7 +239,7 @@ function showResult(){
     <div class="center" style="margin-top:20px;">
         <button class="button primary" onclick="showMode()">เล่นอีกครั้ง</button>
     </div>
-    <p class="center" style="margin-top:20px;">LAZY BY GPT</p>
+    <p class="center" style="margin-top:20px;">จัดทำโดย LAZYC.2</p>
     `;
 }
 
