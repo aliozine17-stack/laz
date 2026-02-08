@@ -3,245 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Psychology Learning App</title>
-
+<title>Flashcard & Quiz Game</title>
 <style>
-body{
-  font-family: Arial, sans-serif;
-  margin:0;
-  padding:20px;
-  text-align:center;
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(to right, #667eea, #764ba2);
+    color: white;
+    margin: 0;
 }
-.container{
-  max-width:900px;
-  margin:auto;
+.container {
+    margin-top: 80px;
 }
-button{
-  padding:10px 15px;
-  margin:5px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:16px;
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
 }
-.main-btn{ background:#4CAF50; color:white; }
-.progress-container{
-  width:100%;
-  background:#ddd;
-  border-radius:20px;
-  margin-bottom:15px;
-  height:20px;
+.top-left {
+    position: absolute;
+    top: 15px;
+    left: 20px;
 }
-.progress-bar{
-  height:100%;
-  width:0%;
-  background:#4CAF50;
-  border-radius:20px;
+.top-right {
+    position: absolute;
+    top: 15px;
+    right: 20px;
 }
-.card{
-  padding:20px;
-  border:1px solid #ccc;
-  border-radius:10px;
-  margin-top:15px;
+.green { background-color: #28a745; color: white; }
+.red { background-color: #dc3545; color: white; }
+.hidden { display: none; }
+.card {
+    font-size: 32px;
+    margin: 40px;
 }
-.hidden{ display:none; }
-.stat-box{
-  background:#f5f5f5;
-  padding:15px;
-  border-radius:10px;
-  text-align:left;
+.option {
+    display: block;
+    margin: 10px auto;
+    width: 200px;
 }
 </style>
 </head>
-
 <body>
-<div class="container">
 
-<h1>Psychology Learning</h1>
+<div id="progress" class="top-left hidden"></div>
+<button id="restartBtn" class="top-right hidden" onclick="restart()">เริ่มใหม่</button>
 
-<div id="home">
-  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;">
-    
-    <div id="flashStats" class="stat-box" style="flex:1;min-width:250px;"></div>
+<div class="container" id="mainMenu">
+    <h1>เลือกโหมดเกม</h1>
+    <button onclick="selectMode('flashcard')">Flashcard</button>
+    <button onclick="selectMode('quiz')">ทดสอบความรู้</button>
+</div>
 
-    <div style="flex:1;min-width:250px;">
-      <button class="main-btn" onclick="chooseMode('flash')">FLASH CARD</button>
+<div class="container hidden" id="selectCount">
+    <h2>เลือกจำนวนข้อ</h2>
+    <button onclick="startGame(10)">10</button>
+    <button onclick="startGame(30)">30</button>
+    <button onclick="startGame(50)">50</button>
+    <button onclick="startGame(90)">90</button>
+</div>
+
+<div class="container hidden" id="gameArea">
+    <div class="card" id="question"></div>
+    <div id="flashButtons" class="hidden">
+        <button onclick="showAnswer()">เฉลย</button>
+        <button onclick="nextQuestion()">ถัดไป</button>
     </div>
-
-  </div>
+    <div id="quizOptions"></div>
 </div>
 
-<div id="amountSelect" class="hidden">
-  <h3>เลือกจำนวนข้อ</h3>
-  <button onclick="startGame(10)">10</button>
-  <button onclick="startGame(30)">30</button>
-  <button onclick="startGame(60)">60</button>
-  <button onclick="startGame(90)">90</button>
-</div>
-
-<div id="gameArea" class="hidden">
-  <div class="progress-container">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
-  <div id="progressText"></div>
-  <div id="content"></div>
-</div>
-
-<div id="result" class="hidden"></div>
-
-</div>
+<div class="container hidden" id="resultArea"></div>
 
 <script>
 
-// ---------------------- คำศัพท์ ----------------------
-const words = [
-{term:"Achievement testing", thai:"การทดสอบผลสัมฤทธิ์", definition:"วัดความรู้หรือทักษะที่เรียนรู้มาในวิชาเฉพาะ"},
-{term:"Adjustment", thai:"การปรับตัว", definition:"การปรับพฤติกรรมให้เข้ากับสภาพแวดล้อม"}, {term:"Adversity Quotient (AQ)", thai:"ดัชนีวัดความสามารถในการเผชิญอุปสรรค", definition:"ความสามารถในการรับมือและฟันฝ่าวิกฤต"}, {term:"Applied Psychology", thai:"จิตวิทยาประยุกต์", definition:"การนำทฤษฎีจิตวิทยาไปใช้แก้ปัญหาในชีวิตจริงหรือวิชาชีพต่างๆ"}, {term:"Aptitude", thai:"ความถนัด", definition:"ศักยภาพเฉพาะตัวหรือความสามารถในการเรียนรู้ในอนาคต"}, {term:"Assessment", thai:"การประเมิน", definition:"การตรวจสอบพฤติกรรมและจิตใจด้วยวิธีการที่หลากหลาย"}, {term:"Attitude", thai:"เจตคติ", definition:"แนวโน้มความรู้สึกและพฤติกรรมต่อสิ่งใดสิ่งหนึ่ง (คิด-รู้สึก-ทำ)"}, {term:"Basic needs", thai:"ความต้องการพื้นฐาน", definition:"ลำดับขั้นความต้องการ 5 ขั้นของ Maslow"}, {term:"Behavior modification", thai:"การปรับพฤติกรรม", definition:"การเปลี่ยนพฤติกรรมโดยใช้ทฤษฎีการเรียนรู้"}, {term:"Behavior therapy", thai:"พฤติกรรมบำบัด", definition:"การบำบัดเพื่อขจัดพฤติกรรมที่ไม่พึงประสงค์"}, {term:"Big five personality factors", thai:"5 องค์ประกอบหลักของบุคลิกภาพ", definition:"5 ด้านหลักที่ใช้ชี้วัดบุคลิกภาพมนุษย์"}, {term:"Career paths", thai:"เส้นทางอาชีพ", definition:"โอกาสความก้าวหน้าในสายงานระยะยาว"}, {term:"Career planning", thai:"การวางแผนอาชีพ", definition:"กระบวนการประเมินตนเองเพื่อตัดสินใจเลือกอาชีพ"}, {term:"Clarification", thai:"การสร้างความกระจ่าง", definition:"เทคนิคการทวนความเพื่อให้สิ่งที่พูดชัดเจนขึ้น"}, {term:"Cognition", thai:"การรู้คิด", definition:"กระบวนการทางปัญญา เช่น การคิด การจำ การตัดสินใจ"}, {term:"Concept", thai:"มโนทัศน์/ความคิดรวบยอด", definition:"ความคิดสรุปยอดของสิ่งที่มีลักษณะร่วมกัน"}, {term:"Counseling technique", thai:"เทคนิคการให้บริการปรึกษา", definition:"วิธีการต่างๆ ที่ใช้ในการให้คำปรึกษา"}, {term:"Defense mechanism", thai:"กลไกป้องกันตน", definition:"วิธีที่จิตใช้ป้องกันความเจ็บปวดในใจ (ระดับจิตไร้สำนึก)"}, {term:"Delusion", thai:"การหลงผิด", definition:"ความเชื่อที่ผิดจากความเป็นจริงอย่างรุนแรงโดยไม่มีเหตุผล"}, {term:"Depression", thai:"ภาวะซึมเศร้า", definition:"อารมณ์หดหู่ ขาดความกระปรี้กระเปร่า"}, {term:"Disability", thai:"การขาดความสามารถ", definition:"ความบกพร่องทางกายหรือจิตที่กระทบต่อการใช้ชีวิต"}, {term:"Distortion", thai:"การบิดเบือน", definition:"การปรับเปลี่ยนความจริงหรือประสบการณ์ให้เข้ากับสภาพจิตใจตนเอง"}, {term:"Egocentric", thai:"การยึดตนเองเป็นศูนย์กลาง", definition:"การสนใจแต่ความเห็นตนเอง ไม่เข้าใจมุมมองผู้อื่น"}, {term:"Emotional intelligence (EQ)", thai:"เชาวน์อารมณ์", definition:"ความสามารถในการจัดการอารมณ์ตนเองและสังคม"}, {term:"Empathy", thai:"การรู้ซึ้งถึงความรู้สึก", definition:"การเข้าใจและเข้าถึงความรู้สึกนึกคิดของคนอื่น"}, {term:"Extraversion", thai:"บุคลิกภาพแบบเปิดเผย", definition:"ลักษณะนิสัยที่ชอบเข้าสังคม สนใจสิ่งภายนอก"}, {term:"Face validity", thai:"ความตรงตามรูปลักษณ์", definition:"การพิจารณาเบื้องต้นว่าเครื่องมือวัดดูน่าเชื่อถือตามวัตถุประสงค์"}, {term:"First impressions", thai:"ความประทับใจครั้งแรก", definition:"ความรู้สึกแรกพบที่เปลี่ยนยาก"}, {term:"Foot-in-the-door technique", thai:"เทคนิคการขอน้อยก่อนแล้วขอมาก", definition:"กลวิธีขอความช่วยเหลือเล็กๆ ก่อน เพื่อให้ได้สิ่งที่ใหญ่กว่าในภายหลัง"}, {term:"Free rider", thai:"คนแอบอิงประโยชน์", definition:"สมาชิกกลุ่มที่ได้ผลประโยชน์โดยไม่ยอมช่วยงาน"}, {term:"Frustration", thai:"ความคับข้องใจ", definition:"อารมณ์ที่เกิดเมื่อถูกขัดขวางไม่ให้ถึงเป้าหมาย"}, {term:"Generalization", thai:"การสรุปรวบยอด/การแผ่ขยาย", definition:"การนำผลจากสิ่งหนึ่งไปสรุปคลุมถึงสิ่งอื่นๆ ที่คล้ายกัน"}, {term:"Guilt", thai:"ความรู้สึกผิด", definition:"ความรู้สึกเมื่อรู้ว่าตนได้กระทำสิ่งที่ผิดพลาด"}, {term:"Hallucination", thai:"ประสาทหลอน", definition:"การรับรู้ (เห็น/ได้ยิน) สิ่งที่ไม่มีอยู่จริง"}, {term:"Halo effect", thai:"เฮโลเอฟเฟกต์", definition:"การที่ความประทับใจด้านหนึ่งส่งผลให้เราตัดสินด้านอื่นๆ ของเขาดีไปด้วย"}, {term:"Human relations", thai:"มนุษยสัมพันธ์", definition:"ความสัมพันธ์ที่ดีระหว่างบุคคลเพื่อให้เกิดความเข้าใจกัน"}, {term:"Hypnosis", thai:"การสะกดจิต", definition:"สภาวะคล้ายหลับที่ยังสามารถรับรู้และสื่อสารกับผู้สะกดจิตได้"}, {term:"Individualism", thai:"ปัจเจกนิยม", definition:"การเน้นเป้าหมายและเอกลักษณ์ส่วนตัวมากกว่ากลุ่ม"}, {term:"Intelligence Quotient (IQ)", thai:"ระดับเชาวน์ปัญญา", definition:"หน่วยวัดความฉลาดทางสติปัญญาเทียบกับอายุ"}, {term:"Intrinsic motivation", thai:"แรงจูงใจภายใน", definition:"ความอยากทำกิจกรรมเพราะความพอใจในตัวกิจกรรมนั้นเอง"}, {term:"Job enlargement", thai:"การเพิ่มความรับผิดชอบในงาน", definition:"การเพิ่มงานในระดับความยากเท่าเดิม"}, {term:"Job enrichment", thai:"การเพิ่มคุณค่างาน", definition:"การเพิ่มงานที่ท้าทายขึ้น มีบทบาทการวางแผนและตัดสินใจ"}, {term:"Law of effect", thai:"กฎแห่งผล", definition:"พฤติกรรมที่ทำแล้วพอใจจะถูกกระทำซ้ำ"}, {term:"Manipulation", thai:"การจัดกระทำ/การชักใย", definition:"การจัดการสถานการณ์ในการวิจัย หรือการใช้กลวิธีคุมผู้อื่น"}, {term:"Mediation", thai:"การไกล่เกลี่ย", definition:"การใช้คนกลางช่วยลดความขัดแย้ง"}, {term:"Minnesota Multiphasic Personality Inventory (MMPI)", thai:"MMPI", definition:"แบบทดสอบบุคลิกภาพมาตรฐานที่วัดลักษณะทางคลินิกหลายด้าน"}, {term:"Morality", thai:"คุณธรรม/จริยธรรม", definition:"หลักเกณฑ์การตัดสินความถูกผิดตามมาตรฐานสังคม"}, {term:"Music Therapy", thai:"ดนตรีบำบัด", definition:"การใช้ดนตรีเพื่อผ่อนคลายหรือบำบัดทางอารมณ์"}, {term:"Myers-Briggs Type Indicator (MBTI)", thai:"MBTI", definition:"แบบวัดบุคลิกภาพ 4 มิติ (เช่น เก็บตัว-เปิดเผย, คิด-รู้สึก)"}, {term:"Narcissism", thai:"ความหลงตัวเอง", definition:"ความรู้สึกว่าตนเหนือกว่าคนอื่นและต้องการการยอมรับสูง"}, {term:"Need for achievement (N-Ach)", thai:"ความต้องการสัมฤทธิ์ผล", definition:"ความปรารถนาที่จะทำให้สำเร็จตามมาตรฐานที่สูง"}, {term:"Negative punishment", thai:"การลงโทษทางลบ", definition:"การลดพฤติกรรมแย่ๆ โดยการ 'เอาสิ่งที่ชอบออกไป'"}, {term:"Negative reinforcement", thai:"การเสริมแรงทางลบ", definition:"การเพิ่มพฤติกรรมดีๆ โดยการ 'เอาสิ่งที่ไม่ชอบออกไป'"}, {term:"Observational learning", thai:"การเรียนรู้จากการสังเกต", definition:"การเรียนรู้จากการดูตัวอย่างผู้อื่น"}, {term:"Overprotection", thai:"การปกป้องเกินควร", definition:"การเลี้ยงดูที่พ่อแม่ทำให้ทุกอย่างจนขัดขวางพัฒนาการเด็ก"}, {term:"Peer group", thai:"กลุ่มเพื่อน", definition:"กลุ่มคนที่มีลักษณะและเป้าหมายคล้ายกัน ซึ่งมีอิทธิพลต่อกันสูง"}, {term:"Perception", thai:"การรับรู้", definition:"การแปลความหมายจากประสาทสัมผัสให้เป็นประสบการณ์ที่เข้าใจได้"}, {term:"Personality disorder", thai:"โรคบุคลิกภาพผิดปกติ", definition:"แบบแผนพฤติกรรมที่ผิดปกติอย่างถาวรและกระทบการใช้ชีวิต"}, {term:"Persuasion", thai:"การโน้มน้าวจิตใจ", definition:"การสื่อสารเพื่อเปลี่ยนเจตคติผู้อื่น"}, {term:"Phobia", thai:"โรคกลัว", definition:"การกลัวบางสิ่งอย่างรุนแรงและไร้เหตุผลจนควบคุมไม่ได้"}, {term:"Prejudice", thai:"อคติ", definition:"ความลำเอียงในการตัดสินผู้อื่น (มักเป็นทางลบ)"}, {term:"Primacy effect", thai:"ผลเสนอแรก", definition:"แนวโน้มที่จะจำข้อมูลหรือประทับใจสิ่งที่เจอเป็นอันดับแรกได้ดีที่สุด"}, {term:"Projective test", thai:"การทดสอบแบบฉายภาพจิต", definition:"การวัดจิตใจผ่านการตอบสนองต่อสิ่งเร้าที่คลุมเครือ (เช่น หยดหมึก)"}, {term:"Psychological rapport", thai:"การสร้างสัมพันธภาพทางจิตวิทยา", definition:"การสร้างความเชื่อใจและเป็นกันเองในการปรึกษา"}, {term:"Psychosis", thai:"โรคจิต", definition:"อาการทางจิตที่หลุดจากโลกความจริง (หลงผิด/หลอน)"}, {term:"Random sampling", thai:"การสุ่มตัวอย่าง", definition:"การเลือกตัวแทนประชากรแบบกระจายเพื่อให้ได้ข้อมูลที่เที่ยงตรง"}, {term:"Rapid-Eye-Movement Sleep (REM sleep)", thai:"การหลับช่วงเร็ม", definition:"ช่วงที่ฝันและลูกตากลอกไปมาอย่างรวดเร็ว"}, {term:"Rationalization", thai:"การหาเหตุผลเข้าข้างตน", definition:"การอ้างเหตุผลเพื่อให้ตนเองรู้สึกสบายใจขึ้นเมื่อทำผิด"}, {term:"Ratio scale", thai:"มาตราอัตราส่วน", definition:"การวัดที่มีช่วงเท่ากันและมี 'ศูนย์แท้' (เช่น น้ำหนัก ส่วนสูง)"}, {term:"Real self", thai:"ตนที่แท้จริง", definition:"ตัวตนที่แท้จริงซึ่งบางครั้งอาจถูกซ่อนไว้"}, {term:"Recall", thai:"การระลึกได้", definition:"การดึงความจำในอดีตกลับมาใช้งาน"}, {term:"Recognition", thai:"การจำได้", definition:"ความรู้สึกคุ้นเคยเมื่อเห็นสิ่งเร้าที่เคยมีประสบการณ์มาก่อน"}, {term:"Regression", thai:"การถดถอย", definition:"การกลับไปทำพฤติกรรมแบบเด็กเพื่อป้องกันตนเอง หรือการถอยกลับไปสู่สภาวะเดิม"}, {term:"Rehabilitation", thai:"การฟื้นฟูสมรรถภาพ", definition:"การปรับปรุงแก้ไขร่างกาย/จิตใจให้กลับมาใช้ชีวิตได้ปกติ"}, {term:"Relaxation", thai:"การผ่อนคลาย", definition:"การลดความเครียดทั้งกายและใจ"}, {term:"Repression", thai:"การเก็บกด", definition:"การผลักความทรงจำที่เจ็บปวดลงสู่จิตไร้สำนึกโดยไม่ตั้งใจ"}, {term:"Role conflict", thai:"ความขัดแย้งในบทบาท", definition:"สภาวะที่ต้องทำหลายบทบาทซึ่งขัดแย้งกันเอง"}, {term:"Self-Concept", thai:"อัตมโนทัศน์", definition:"การรับรู้และประเมินภาพลักษณ์ ค่านิยม และคุณค่าของตนเอง"}, {term:"Self-Discipline", thai:"การมีวินัยในตนเอง", definition:"การควบคุมตนเองให้ทำในสิ่งที่ถูกต้องในระยะยาว"}, {term:"Self-Efficacy", thai:"การรับรู้ความสามารถของตน", definition:"ความเชื่อมั่นว่าตนเองสามารถทำสิ่งใดสิ่งหนึ่งให้สำเร็จได้"}, {term:"Self-Esteem", thai:"การเห็นคุณค่าแห่งตน", definition:"ความภาคภูมิใจและยอมรับในคุณค่าของตนเอง"}, {term:"Semantic Differential Scale", thai:"มาตรจำแนกความหมาย", definition:"การวัดความรู้สึกผ่านคำคู่ตรงข้าม (เช่น ดี-เลว)"}, {term:"Socialization", thai:"กระบวนการเรียนรู้ทางสังคม", definition:"การถ่ายทอดค่านิยมและจารีตจากสังคมสู่บุคคล"}, {term:"Social Quotient (SQ)", thai:"ดัชนีวัดความสามารถทางสังคม", definition:"ทักษะการเข้าสังคมและอยู่ร่วมกับผู้อื่นอย่างมีความสุข"}, {term:"Stereotype", thai:"การเหมารวม", definition:"การมองคนกลุ่มหนึ่งด้วยภาพจำที่แคบและลุ่มหลง (อคติ)"}, {term:"Tension", thai:"ความรู้สึกตึงเครียด", definition:"สภาวะจิตใจหรือกล้ามเนื้อที่ตื่นตัวและกระวนกระวาย"}, {term:"Test Battery", thai:"ชุดแบบทดสอบ", definition:"กลุ่มของแบบทดสอบที่ใช้ร่วมกันเพื่อประเมินเรื่องใดเรื่องหนึ่ง"}, {term:"Trait", thai:"ลักษณะนิสัย", definition:"บุคลิกภาพที่คงทนและเป็นตัวกำหนดพฤติกรรมเฉพาะบุคคล"}, {term:"Unconscious", thai:"จิตไร้สำนึก", definition:"ส่วนของจิตที่เก็บความลับ แรงขับ หรือความจำที่เจ้าตัวไม่รู้ตัวแต่ส่งผลต่อการกระทำ"}, {term:"Value", thai:"ค่านิยม", definition:"สิ่งที่บุคคลหรือสังคมยึดถือเพื่อใช้ตัดสินใจเลือกกระทำสิ่งต่างๆ"}
+// =====================
+// ชุดข้อมูลกลาง (ใช้ทั้ง 2 เกม)
+// =====================
+const vocabulary = [
+    { word: "Apple", meaning: "แอปเปิ้ล" },
+    { word: "Dog", meaning: "สุนัข" },
+    { word: "Cat", meaning: "แมว" },
+    { word: "Car", meaning: "รถยนต์" },
+    { word: "Book", meaning: "หนังสือ" },
+    { word: "Water", meaning: "น้ำ" },
+    { word: "Sun", meaning: "พระอาทิตย์" },
+    { word: "Moon", meaning: "พระจันทร์" },
+    { word: "Tree", meaning: "ต้นไม้" },
+    { word: "House", meaning: "บ้าน" }
 ];
 
-// ---------------------- ตัวแปร ----------------------
-let selectedWords = [];
+let mode = "";
+let selectedQuestions = [];
 let currentIndex = 0;
+let totalQuestions = 0;
 let score = 0;
 let wrongAnswers = [];
-let totalQuestions = 0;
-let revealed = false;
 
-// ---------------------- สถิติ ----------------------
-function updateFlashStats(){
-  let stats = JSON.parse(localStorage.getItem("flashStats")) || {
-    plays:0,
-    totalCorrect:0,
-    totalWrong:0
-  };
-  stats.plays += 1;
-  stats.totalCorrect += score;
-  stats.totalWrong += (totalQuestions-score);
-  localStorage.setItem("flashStats", JSON.stringify(stats));
+// =====================
+function selectMode(selectedMode) {
+    mode = selectedMode;
+    document.getElementById("mainMenu").classList.add("hidden");
+    document.getElementById("selectCount").classList.remove("hidden");
 }
 
-function renderStats(){
-  let stats = JSON.parse(localStorage.getItem("flashStats"));
-  if(!stats){
-    document.getElementById("flashStats").innerHTML =
-      "<h3>📊 Flash Card Stats</h3><p>ยังไม่มีข้อมูล</p>";
-    return;
-  }
-  document.getElementById("flashStats").innerHTML = `
-    <h3>📊 Flash Card Stats</h3>
-    <p>เล่นทั้งหมด: ${stats.plays} ครั้ง</p>
-    <p>ตอบถูกสะสม: ${stats.totalCorrect}</p>
-    <p>ตอบผิดสะสม: ${stats.totalWrong}</p>
-  `;
+function startGame(count) {
+    totalQuestions = count;
+    currentIndex = 0;
+    score = 0;
+    wrongAnswers = [];
+
+    selectedQuestions = shuffle([...vocabulary]);
+    while (selectedQuestions.length < count) {
+        selectedQuestions = selectedQuestions.concat(shuffle([...vocabulary]));
+    }
+    selectedQuestions = selectedQuestions.slice(0, count);
+
+    document.getElementById("selectCount").classList.add("hidden");
+    document.getElementById("gameArea").classList.remove("hidden");
+    document.getElementById("progress").classList.remove("hidden");
+    document.getElementById("restartBtn").classList.remove("hidden");
+
+    nextQuestion();
 }
 
-// ---------------------- เกม ----------------------
-function shuffle(array){
-  return array.sort(()=>Math.random()-0.5);
-}
-
-function chooseMode(){
-  document.getElementById("home").classList.add("hidden");
-  document.getElementById("amountSelect").classList.remove("hidden");
-}
-
-function startGame(amount){
-  totalQuestions = amount > words.length ? words.length : amount;
-  selectedWords = shuffle([...words]).slice(0,totalQuestions);
-  currentIndex = 0;
-  score = 0;
-  wrongAnswers = [];
-  revealed = false;
-
-  document.getElementById("amountSelect").classList.add("hidden");
-  document.getElementById("gameArea").classList.remove("hidden");
-  loadQuestion();
-}
-
-function updateProgress(){
-  let percent = ((currentIndex)/totalQuestions)*100;
-  document.getElementById("progressBar").style.width = percent + "%";
-  document.getElementById("progressText").innerText =
-    "ข้อที่ " + (currentIndex+1) + " / " + totalQuestions;
-}
-
-function loadQuestion(){
-  if(currentIndex >= totalQuestions){
-    showResult();
-    return;
-  }
-
-  revealed = false;
-  updateProgress();
-  const word = selectedWords[currentIndex];
-
-  document.getElementById("content").innerHTML = `
-    <div class="card">
-      <h2>${word.term}</h2>
-      <h3>${word.thai}</h3>
-      <p id="def" class="hidden">${word.definition}</p>
-      <button onclick="showAnswer()">เฉลย</button>
-      <button onclick="markCorrect()" id="correctBtn">ตอบได้</button>
-      <button onclick="skipWord()">ข้ามคำนี้</button>
-    </div>
-  `;
-}
-
-function showAnswer(){
-  document.getElementById("def").classList.remove("hidden");
-  revealed = true;
-  document.getElementById("correctBtn").disabled = true;
-}
-
-function markCorrect(){
-  score++;
-  currentIndex++;
-  loadQuestion();
-}
-
-function skipWord(){
-  wrongAnswers.push(selectedWords[currentIndex]);
-  currentIndex++;
-  loadQuestion();
-}
-
-function showResult(){
-  document.getElementById("gameArea").classList.add("hidden");
-  const resultDiv = document.getElementById("result");
-  resultDiv.classList.remove("hidden");
-
-  updateFlashStats();
-  renderStats();
-
-  let percent = Math.round((score/totalQuestions)*100);
-  let wrongPercent = 100-percent;
-
-  resultDiv.innerHTML = `
-    <h2>ผลลัพธ์</h2>
-
-    <div style="background:#ddd;border-radius:20px;overflow:hidden;">
-      <div style="width:${percent}%;background:#4CAF50;height:25px;"></div>
-    </div>
-
-    <p>ถูก ${score} คำ (${percent}%)</p>
-    <p>ผิด ${totalQuestions-score} คำ (${wrongPercent}%)</p>
-
-    <h3>คำที่ตอบไม่ได้</h3>
-    ${wrongAnswers.length===0
-      ? "<p>เก่งมาก! ไม่มีคำผิด 🎉</p>"
-      : wrongAnswers.map(w=>`<p><b>${w.term}</b> = ${w.thai}</p>`).join("")
+function nextQuestion() {
+    if (currentIndex >= totalQuestions) {
+        endGame();
+        return;
     }
 
-    <button onclick="restart()">เริ่มใหม่</button>
-  `;
+    document.getElementById("quizOptions").innerHTML = "";
+    document.getElementById("question").innerText = selectedQuestions[currentIndex].word;
+    document.getElementById("progress").innerText =
+        (currentIndex + 1) + "/" + totalQuestions;
+
+    if (mode === "flashcard") {
+        document.getElementById("flashButtons").classList.remove("hidden");
+    } else {
+        document.getElementById("flashButtons").classList.add("hidden");
+        showQuizOptions();
+    }
+
+    currentIndex++;
 }
 
-function restart(){
-  document.getElementById("result").classList.add("hidden");
-  document.getElementById("home").classList.remove("hidden");
+function showAnswer() {
+    document.getElementById("question").innerText =
+        selectedQuestions[currentIndex - 1].meaning;
 }
 
-window.onload = renderStats;
+function showQuizOptions() {
+    const correct = selectedQuestions[currentIndex - 1];
+    let options = shuffle([correct, ...shuffle(vocabulary).slice(0,2)]);
+    options = shuffle(options);
+
+    options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.innerText = option.meaning;
+        btn.classList.add("option");
+        btn.onclick = () => checkAnswer(option, correct, btn);
+        document.getElementById("quizOptions").appendChild(btn);
+    });
+
+    const skipBtn = document.createElement("button");
+    skipBtn.innerText = "ข้าม";
+    skipBtn.onclick = nextQuestion;
+    document.getElementById("quizOptions").appendChild(skipBtn);
+}
+
+function checkAnswer(selected, correct, btn) {
+    if (selected.meaning === correct.meaning) {
+        btn.classList.add("green");
+        score++;
+    } else {
+        btn.classList.add("red");
+        wrongAnswers.push({
+            question: correct.word,
+            correct: correct.meaning
+        });
+    }
+    setTimeout(nextQuestion, 500);
+}
+
+function endGame() {
+    document.getElementById("gameArea").classList.add("hidden");
+    document.getElementById("resultArea").classList.remove("hidden");
+
+    let resultHTML = "<h2>เยี่ยมมาก! 🎉</h2>";
+
+    if (mode === "quiz") {
+        resultHTML += "<p>คะแนนของคุณ: " + score + "/" + totalQuestions + "</p>";
+        if (wrongAnswers.length > 0) {
+            resultHTML += "<h3>ข้อที่ตอบผิด</h3>";
+            wrongAnswers.forEach(item => {
+                resultHTML += "<p>" + item.question + " = " + item.correct + "</p>";
+            });
+        }
+    }
+
+    resultHTML += "<h3>LAZY BY GPT</h3>";
+    document.getElementById("resultArea").innerHTML = resultHTML;
+}
+
+function restart() {
+    location.reload();
+}
+
+function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
+}
 
 </script>
 </body>
