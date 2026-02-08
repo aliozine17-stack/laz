@@ -3,219 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flashcard & Quiz Game</title>
+<title>ทดสอบความรู้</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: linear-gradient(to right, #667eea, #764ba2);
-    color: white;
-    margin: 0;
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#d9d9d9;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
-.container {
-    margin-top: 80px;
+.container{
+    width:95%;
+    max-width:600px;
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    position:relative;
 }
-button {
-    padding: 10px 20px;
-    margin: 10px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
+h1{text-align:center;}
+.button{
+    padding:10px 15px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
 }
-.top-left {
-    position: absolute;
-    top: 15px;
-    left: 20px;
+.primary{background:#4CAF50;color:white;}
+.secondary{background:#555;color:white;}
+.choice{
+    display:block;
+    width:100%;
+    margin:8px 0;
+    padding:10px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    background:#f0f0f0;
 }
-.top-right {
-    position: absolute;
-    top: 15px;
-    right: 20px;
+.choice.correct{background:#4CAF50;color:white;}
+.choice.wrong{background:#e74c3c;color:white;}
+.top-left{
+    position:absolute;
+    top:10px;
+    left:15px;
+    font-weight:bold;
 }
-.green { background-color: #28a745; color: white; }
-.red { background-color: #dc3545; color: white; }
-.hidden { display: none; }
-.card {
-    font-size: 32px;
-    margin: 40px;
+.top-right{
+    position:absolute;
+    top:10px;
+    right:15px;
 }
-.option {
-    display: block;
-    margin: 10px auto;
-    width: 200px;
+.word{
+    font-size:24px;
+    text-align:center;
+    margin:20px 0;
 }
+.center{text-align:center;}
 </style>
 </head>
 <body>
 
-<div id="progress" class="top-left hidden"></div>
-<button id="restartBtn" class="top-right hidden" onclick="restart()">เริ่มใหม่</button>
-
-<div class="container" id="mainMenu">
-    <h1>เลือกโหมดเกม</h1>
-    <button onclick="selectMode('flashcard')">Flashcard</button>
-    <button onclick="selectMode('quiz')">ทดสอบความรู้</button>
-</div>
-
-<div class="container hidden" id="selectCount">
-    <h2>เลือกจำนวนข้อ</h2>
-    <button onclick="startGame(10)">10</button>
-    <button onclick="startGame(30)">30</button>
-    <button onclick="startGame(50)">50</button>
-    <button onclick="startGame(90)">90</button>
-</div>
-
-<div class="container hidden" id="gameArea">
-    <div class="card" id="question"></div>
-    <div id="flashButtons" class="hidden">
-        <button onclick="showAnswer()">เฉลย</button>
-        <button onclick="nextQuestion()">ถัดไป</button>
-    </div>
-    <div id="quizOptions"></div>
-</div>
-
-<div class="container hidden" id="resultArea"></div>
+<div class="container" id="app"></div>
 
 <script>
-
-// =====================
-// ชุดข้อมูลกลาง (ใช้ทั้ง 2 เกม)
-// =====================
-const vocabulary = [
-    { word: "Apple", meaning: "แอปเปิ้ล" },
-    { word: "Dog", meaning: "สุนัข" },
-    { word: "Cat", meaning: "แมว" },
-    { word: "Car", meaning: "รถยนต์" },
-    { word: "Book", meaning: "หนังสือ" },
-    { word: "Water", meaning: "น้ำ" },
-    { word: "Sun", meaning: "พระอาทิตย์" },
-    { word: "Moon", meaning: "พระจันทร์" },
-    { word: "Tree", meaning: "ต้นไม้" },
-    { word: "House", meaning: "บ้าน" }
-];
-
-let mode = "";
-let selectedQuestions = [];
-let currentIndex = 0;
-let totalQuestions = 0;
-let score = 0;
-let wrongAnswers = [];
-
-// =====================
-function selectMode(selectedMode) {
-    mode = selectedMode;
-    document.getElementById("mainMenu").classList.add("hidden");
-    document.getElementById("selectCount").classList.remove("hidden");
+const allQuestions = [];
+for(let i=1;i<=200;i++){
+    allQuestions.push({
+        word:"คำศัพท์ที่ "+i,
+        correct:"คำตอบที่ถูก "+i,
+        options:[
+            "คำตอบที่ถูก "+i,
+            "ตัวเลือกหลอก A"+i,
+            "ตัวเลือกหลอก B"+i
+        ]
+    });
 }
 
-function startGame(count) {
-    totalQuestions = count;
-    currentIndex = 0;
-    score = 0;
-    wrongAnswers = [];
+let selectedAmount=0;
+let currentIndex=0;
+let score=0;
+let questions=[];
+let wrongAnswers=[];
 
-    selectedQuestions = shuffle([...vocabulary]);
-    while (selectedQuestions.length < count) {
-        selectedQuestions = selectedQuestions.concat(shuffle([...vocabulary]));
-    }
-    selectedQuestions = selectedQuestions.slice(0, count);
+const app=document.getElementById("app");
 
-    document.getElementById("selectCount").classList.add("hidden");
-    document.getElementById("gameArea").classList.remove("hidden");
-    document.getElementById("progress").classList.remove("hidden");
-    document.getElementById("restartBtn").classList.remove("hidden");
-
-    nextQuestion();
+function showMode(){
+    app.innerHTML=`
+    <h1>โหมดทดสอบความรู้</h1>
+    <div class="center">
+        <button class="button primary" onclick="selectAmount(10)">10 ข้อ</button>
+        <button class="button primary" onclick="selectAmount(30)">30 ข้อ</button>
+        <button class="button primary" onclick="selectAmount(50)">50 ข้อ</button>
+        <button class="button primary" onclick="selectAmount(90)">90 ข้อ</button>
+    </div>
+    `;
 }
 
-function nextQuestion() {
-    if (currentIndex >= totalQuestions) {
-        endGame();
+function selectAmount(num){
+    selectedAmount=num;
+    startGame();
+}
+
+function startGame(){
+    questions=[...allQuestions].sort(()=>0.5-Math.random()).slice(0,selectedAmount);
+    currentIndex=0;
+    score=0;
+    wrongAnswers=[];
+    renderQuestion();
+}
+
+function renderQuestion(){
+    if(currentIndex>=questions.length){
+        showResult();
         return;
     }
-
-    document.getElementById("quizOptions").innerHTML = "";
-    document.getElementById("question").innerText = selectedQuestions[currentIndex].word;
-    document.getElementById("progress").innerText =
-        (currentIndex + 1) + "/" + totalQuestions;
-
-    if (mode === "flashcard") {
-        document.getElementById("flashButtons").classList.remove("hidden");
-    } else {
-        document.getElementById("flashButtons").classList.add("hidden");
-        showQuizOptions();
-    }
-
-    currentIndex++;
+    const q=questions[currentIndex];
+    app.innerHTML=`
+    <div class="top-left">${currentIndex+1}/${selectedAmount}</div>
+    <div class="top-right">
+        <button class="button secondary" onclick="showMode()">เริ่มใหม่</button>
+    </div>
+    <div class="word">
+        ${q.word}
+        <div>
+            <button class="button secondary" onclick="skipQuestion()">ข้าม</button>
+        </div>
+    </div>
+    ${q.options.sort(()=>0.5-Math.random()).map(opt=>
+        `<button class="choice" onclick="selectAnswer(this,'${opt}')">${opt}</button>`
+    ).join("")}
+    `;
 }
 
-function showAnswer() {
-    document.getElementById("question").innerText =
-        selectedQuestions[currentIndex - 1].meaning;
-}
-
-function showQuizOptions() {
-    const correct = selectedQuestions[currentIndex - 1];
-    let options = shuffle([correct, ...shuffle(vocabulary).slice(0,2)]);
-    options = shuffle(options);
-
-    options.forEach(option => {
-        const btn = document.createElement("button");
-        btn.innerText = option.meaning;
-        btn.classList.add("option");
-        btn.onclick = () => checkAnswer(option, correct, btn);
-        document.getElementById("quizOptions").appendChild(btn);
-    });
-
-    const skipBtn = document.createElement("button");
-    skipBtn.innerText = "ข้าม";
-    skipBtn.onclick = nextQuestion;
-    document.getElementById("quizOptions").appendChild(skipBtn);
-}
-
-function checkAnswer(selected, correct, btn) {
-    if (selected.meaning === correct.meaning) {
-        btn.classList.add("green");
+function selectAnswer(button,answer){
+    const correct=questions[currentIndex].correct;
+    if(answer===correct){
+        button.classList.add("correct");
         score++;
-    } else {
-        btn.classList.add("red");
+    }else{
+        button.classList.add("wrong");
         wrongAnswers.push({
-            question: correct.word,
-            correct: correct.meaning
+            question:questions[currentIndex].word,
+            correct:correct
         });
     }
-    setTimeout(nextQuestion, 500);
+    setTimeout(()=>{
+        currentIndex++;
+        renderQuestion();
+    },600);
 }
 
-function endGame() {
-    document.getElementById("gameArea").classList.add("hidden");
-    document.getElementById("resultArea").classList.remove("hidden");
+function skipQuestion(){
+    wrongAnswers.push({
+        question:questions[currentIndex].word,
+        correct:questions[currentIndex].correct
+    });
+    currentIndex++;
+    renderQuestion();
+}
 
-    let resultHTML = "<h2>เยี่ยมมาก! 🎉</h2>";
-
-    if (mode === "quiz") {
-        resultHTML += "<p>คะแนนของคุณ: " + score + "/" + totalQuestions + "</p>";
-        if (wrongAnswers.length > 0) {
-            resultHTML += "<h3>ข้อที่ตอบผิด</h3>";
-            wrongAnswers.forEach(item => {
-                resultHTML += "<p>" + item.question + " = " + item.correct + "</p>";
-            });
-        }
+function showResult(){
+    app.innerHTML=`
+    <h1>จบเกม 🎉</h1>
+    <p class="center">คุณเก่งมาก! พยายามได้ดีแล้ว 💪</p>
+    <p class="center">คะแนนของคุณ: ${score} / ${selectedAmount}</p>
+    <h3>เฉลยข้อที่ผิด</h3>
+    ${wrongAnswers.length===0
+        ? "<p>ตอบถูกทั้งหมดสุดยอดมาก!</p>"
+        : wrongAnswers.map(w=>`<p>${w.question} → ${w.correct}</p>`).join("")
     }
-
-    resultHTML += "<h3>LAZY BY GPT</h3>";
-    document.getElementById("resultArea").innerHTML = resultHTML;
+    <div class="center" style="margin-top:20px;">
+        <button class="button primary" onclick="showMode()">เล่นอีกครั้ง</button>
+    </div>
+    <p class="center" style="margin-top:20px;">LAZY BY GPT</p>
+    `;
 }
 
-function restart() {
-    location.reload();
-}
-
-function shuffle(array) {
-    return array.sort(() => Math.random() - 0.5);
-}
-
+showMode();
 </script>
+
 </body>
 </html>
